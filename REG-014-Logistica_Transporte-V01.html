@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REG-014 · Registro de Movimientos de Transporte</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --accent:#0E6B8A; --accent-d:#094E66; --accent-l:#E4F2F7;
+  --bg:#ECEEF0; --surface:#FFFFFF; --border:#D0D4D9; --border-d:#B0B6BC;
+  --text:#1C2226; --text-2:#5A6470; --text-3:#8A949E;
+  --ok-bg:#EAF5EC; --ok-text:#1E6B2E; --ok-bd:#A8D5AE;
+  --warn-bg:#FEF9EC; --warn-text:#8A5C00; --warn-bd:#ECD98A;
+  --err-bg:#FDEDED; --err-text:#B72020; --err-bd:#F5AAAA;
+  --nav-h:40px; --radius:4px;
+  --font:'IBM Plex Sans',sans-serif; --mono:'IBM Plex Mono',monospace;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:var(--font); font-size:13px; line-height:1.4; color:var(--text);
+  background:var(--bg);
+}
+::selection{background:var(--accent-l);}
+
+/* ---------- NAV ---------- */
+nav{
+  position:fixed; top:0; left:0; right:0; height:var(--nav-h);
+  background:var(--accent-d); border-bottom:2px solid var(--accent);
+  display:flex; align-items:center; padding:0 20px; z-index:200; gap:14px;
+}
+.nav-brand{
+  font-family:var(--mono); font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.06em; color:rgba(255,255,255,.9);
+  padding-right:14px; border-right:1px solid rgba(255,255,255,.2);
+  white-space:nowrap;
+}
+.nav-links{display:flex; gap:4px;}
+.nav-links a{
+  font-size:11px; color:rgba(255,255,255,.65); padding:5px 11px; border-radius:3px;
+  text-decoration:none; font-family:var(--font); transition:background .1s,color .1s;
+  cursor:pointer; white-space:nowrap;
+}
+.nav-links a:hover{background:rgba(255,255,255,.10); color:rgba(255,255,255,.9);}
+.nav-links a.active{background:rgba(255,255,255,.18); color:#fff; font-weight:700;}
+.nav-end{margin-left:auto; display:flex; align-items:center; gap:10px;}
+#liveDot{width:6px; height:6px; border-radius:50%; background:#4ADE80; box-shadow:0 0 6px #4ADE80; display:none;}
+#liveDot.on{display:inline-block;}
+#syncStatus{font-family:var(--mono); font-size:11px; color:rgba(255,255,255,.55); white-space:nowrap;}
+#syncStatus.sync-ok{color:#4ADE80;}
+#syncStatus.sync-error{color:#F87171;}
+.nav-btn{
+  height:26px; font-size:11px; border-radius:3px; border:1px solid rgba(255,255,255,.3);
+  background:rgba(255,255,255,.08); color:#fff; padding:0 10px; cursor:pointer;
+  font-family:var(--font); font-weight:600; display:inline-flex; align-items:center; gap:5px;
+  white-space:nowrap;
+}
+.nav-btn:hover{background:rgba(255,255,255,.16);}
+
+/* ---------- LAYOUT ---------- */
+.layout{
+  max-width:1440px; margin:0 auto; padding:calc(var(--nav-h) + 20px) 20px 40px;
+  display:flex; flex-direction:column;
+}
+.doc-block{display:flex; flex-direction:column; gap:0;}
+.doc-block + .doc-block{margin-top:32px;}
+
+/* ---------- SECTION PAGES (HOJAS SEPARADAS) ---------- */
+.section-page{display:none;}
+.section-page.active{display:flex; flex-direction:column;}
+
+/* ---------- CARDS ---------- */
+.card{background:var(--surface); border:1px solid var(--border); overflow:hidden;}
+.card + .card{border-top:none;}
+.doc-block .card:first-child{border-radius:var(--radius) var(--radius) 0 0;}
+.doc-block .card:last-child{border-radius:0 0 var(--radius) var(--radius);}
+.card-body{padding:14px 16px 16px;}
+
+/* ---------- ENCABEZADO DOCUMENTAL ---------- */
+.doc-header{
+  display:grid; grid-template-columns:90px 1fr auto; border-bottom:1px solid var(--border);
+}
+.doc-logo{
+  background:var(--accent); display:flex; align-items:center; justify-content:center;
+  border-right:1px solid var(--border);
+  font-family:var(--mono); font-size:18px; font-weight:600; color:#fff; letter-spacing:.08em;
+}
+.doc-title-col{
+  display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
+  padding:10px 20px; border-right:1px solid var(--border);
+}
+.doc-title{font-size:14px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text);}
+.doc-subtitle{font-size:12px; color:var(--text-2); margin-top:3px;}
+.doc-meta{display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr;}
+.meta-cell{padding:6px 12px; min-width:110px; border-left:1px solid var(--border);}
+.meta-cell.top{border-bottom:1px solid var(--border);}
+.meta-label{font-size:9px; text-transform:uppercase; letter-spacing:.07em; color:var(--text-3);}
+.meta-value,.meta-input{
+  font-family:var(--mono); font-size:12px; font-weight:600; color:var(--text);
+  border:none; background:transparent; padding:0; width:100%; margin-top:2px;
+}
+.meta-input:focus{outline:none;}
+
+/* ---------- SECTION TITLES ---------- */
+.section-title{
+  font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--accent);
+  padding-bottom:6px; margin-bottom:12px; border-bottom:1.5px solid var(--accent-l);
+  display:flex; align-items:center; gap:6px;
+}
+.section-title::before{content:""; width:3px; height:12px; background:var(--accent); border-radius:2px;}
+
+/* ---------- KPIs ---------- */
+.kpi-row{display:flex; gap:14px; flex-wrap:wrap; margin-bottom:20px;}
+.kpi-card{
+  flex:1; min-width:170px; background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius); padding:12px 14px;
+}
+.kpi-label{font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-3); font-weight:700;}
+.kpi-value{font-family:var(--mono); font-size:24px; font-weight:700; color:var(--accent-d); margin-top:3px;}
+.kpi-sub{font-size:11px; color:var(--text-2); margin-top:3px; font-family:var(--mono);}
+
+/* ---------- BUTTONS ---------- */
+.btn{
+  height:30px; padding:0 12px; font-size:12px; font-weight:600; border-radius:var(--radius);
+  border:1px solid; display:inline-flex; align-items:center; gap:5px; cursor:pointer;
+  transition:filter .1s; font-family:var(--font); background:var(--surface);
+}
+.btn:hover{filter:brightness(.93);}
+.btn-primary{background:var(--accent); border-color:var(--accent); color:#fff;}
+.btn-ok{background:var(--ok-bg); border-color:var(--ok-bd); color:var(--ok-text);}
+.btn-warn{background:var(--warn-bg); border-color:var(--warn-bd); color:var(--warn-text);}
+.btn-danger{background:var(--err-bg); border-color:var(--err-bd); color:var(--err-text);}
+.btn-light{background:var(--surface); border-color:var(--border); color:var(--text-2);}
+
+.btn-add-row{
+  width:100%; height:34px; border:1.5px dashed var(--accent-l); border-radius:var(--radius);
+  color:var(--accent); font-size:12px; font-weight:600; background:transparent; cursor:pointer;
+  font-family:var(--font);
+}
+.btn-add-row:hover{background:var(--accent-l);}
+.btn-del-row{
+  width:22px; height:22px; border:1px solid var(--err-bd); background:var(--err-bg); color:var(--err-text);
+  font-size:14px; font-weight:700; border-radius:3px; cursor:pointer; line-height:1;
+  display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.btn-del-row:hover{filter:brightness(.95);}
+
+/* ---------- TABLES ---------- */
+.table-scroll{overflow-x:auto; -webkit-overflow-scrolling:touch;}
+table{border-collapse:collapse; width:100%;}
+th{
+  background:var(--bg); font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em;
+  color:var(--text-2); padding:7px 8px; border-top:1px solid var(--border); border-bottom:1px solid var(--border-d);
+  border-right:1px solid var(--border); text-align:left; white-space:nowrap;
+}
+th:last-child{border-right:none;}
+td{
+  padding:6px 8px; border-bottom:1px solid var(--border); border-right:1px solid var(--border);
+  font-size:12px; vertical-align:middle;
+}
+td:last-child{border-right:none;}
+tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:#F4F8FA;}
+.rownum{font-family:var(--mono); font-size:11px; color:var(--text-3); text-align:center; width:26px;}
+
+input[type=text],input[type=time],input[type=number],select,textarea{
+  font-family:var(--font); font-size:12px; color:var(--text);
+  border:1px solid transparent; background:transparent; border-radius:3px; padding:4px 6px; width:100%;
+}
+input[type=text]:hover,input[type=time]:hover,input[type=number]:hover,select:hover,textarea:hover{
+  border-color:var(--border); background:#fff;
+}
+input[type=text]:focus,input[type=time]:focus,input[type=number]:focus,select:focus,textarea:focus{
+  outline:none; border-color:var(--accent); background:#fff; box-shadow:0 0 0 2px rgba(14,107,138,.08);
+}
+select{
+  appearance:none; -webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='6'%3E%3Cpath d='M0 0l4.5 6L9 0z' fill='%235A6470'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 6px center; padding-right:22px;
+}
+textarea.cta{resize:none; overflow:hidden; min-height:36px; font-family:var(--font);}
+
+/* ---------- BADGES / CHIPS ---------- */
+.badge{border-radius:10px; font-size:11px; font-weight:700; padding:2px 8px; display:inline-block;}
+.b-ok{background:var(--ok-bg); color:var(--ok-text); border:1px solid var(--ok-bd);}
+.b-warn{background:var(--warn-bg); color:var(--warn-text); border:1px solid var(--warn-bd);}
+.b-info{background:var(--accent-l); color:var(--accent-d); border:1px solid var(--accent-l);}
+
+.gasto-chip{
+  display:inline-flex; align-items:center; gap:5px; background:var(--accent-l); border:1px solid var(--border);
+  border-radius:var(--radius); padding:4px 6px; margin:3px; vertical-align:middle;
+}
+.gasto-chip select{width:auto; min-width:118px; font-size:11px; padding:3px 18px 3px 5px; background-color:transparent;}
+.gasto-amt{display:flex; align-items:center; gap:2px; font-family:var(--mono); font-size:12px; color:var(--text-2);}
+.gasto-chip input[type=text][data-field="monto"]{width:100px; font-size:12px; padding:3px 5px; text-align:right; font-family:var(--mono);}
+.gasto-chip input[type=text][data-field="detalle"]{width:120px; font-size:11px; padding:3px 5px;}
+.gasto-chip .thumb{width:24px; height:24px; object-fit:cover; border-radius:2px; border:1px solid var(--border); cursor:pointer;}
+.gasto-chip label.filebtn{
+  width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center;
+  border:1px solid var(--border); border-radius:2px; background:#fff; cursor:pointer; color:var(--text-2); flex-shrink:0;
+}
+.gasto-chip label.filebtn input{display:none;}
+.gastos-cell{display:flex; flex-direction:column; align-items:flex-start; gap:2px; min-width:280px;}
+
+/* ---------- DIA GROUP ---------- */
+.dia-group{border:1px solid var(--border); border-radius:var(--radius); margin-bottom:18px; overflow:hidden;}
+.dia-group:last-child{margin-bottom:0;}
+.dia-header{
+  background:var(--bg); border-bottom:1px solid var(--border); padding:10px 12px;
+  display:flex; flex-wrap:wrap; align-items:flex-end; gap:16px;
+}
+.dia-field{display:flex; flex-direction:column; gap:2px;}
+.dia-field .lbl{font-size:9px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-3); font-weight:700;}
+.date-mask-wrap{display:flex; align-items:center; gap:4px;}
+.date-mask{font-family:var(--mono); font-weight:600; width:82px; border:1px solid var(--border); background:#fff;}
+.cal-btn{
+  width:26px; height:26px; border:1px solid var(--border); background:#fff; border-radius:3px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; color:var(--text-2); font-size:13px; position:relative;
+}
+.cal-btn input[type=date]{position:absolute; opacity:0; width:100%; height:100%; left:0; top:0; cursor:pointer;}
+.he-input{width:70px; font-family:var(--mono); font-weight:600; border:1px solid var(--border); background:#fff;}
+.he-input[disabled]{background:var(--bg); color:var(--text-3);}
+.he-auto{font-family:var(--mono); font-size:11px; color:var(--text-2);}
+.chk-wrap{display:flex; align-items:center; gap:5px; font-size:11px; color:var(--text-2); font-weight:600;}
+.tot-badge{font-family:var(--mono); font-weight:700; font-size:12px; color:var(--accent-d);}
+.dia-header .spacer{flex:1;}
+.dia-body{padding:10px 12px 12px;}
+.obs-wrap{margin-top:10px;}
+.obs-wrap .lbl{font-size:9px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-3); font-weight:700; margin-bottom:3px; display:block;}
+
+.empty-hint{color:var(--text-3); font-size:12px; padding:14px; text-align:center;}
+
+/* ---------- RESPONSIVE / MOBILE ---------- */
+@media (max-width: 720px){
+  .layout{padding:calc(var(--nav-h) + 14px) 10px 30px;}
+  .nav-brand{font-size:9px; padding-right:8px;}
+  .nav-links a{padding:5px 8px; font-size:10px;}
+  .nav-end{gap:6px;}
+  .nav-btn{padding:0 7px; font-size:10px;}
+  #syncStatus{display:none;}
+  .doc-header{grid-template-columns:56px 1fr;}
+  .doc-logo{font-size:14px;}
+  .doc-title{font-size:12px;}
+  .doc-meta{grid-column:1 / -1; border-top:1px solid var(--border);}
+  .meta-cell{padding:5px 10px; min-width:0;}
+  .kpi-row{gap:8px;}
+  .kpi-card{min-width:calc(50% - 4px); padding:10px;}
+  .kpi-value{font-size:19px;}
+  table{min-width:760px;}
+  .dia-header{gap:10px; padding:8px;}
+  .card-body{padding:12px 10px 14px;}
+}
+
+/* ---------- PRINT ---------- */
+@media print{
+  @page{ size:A3 landscape; margin:8mm; }
+  nav,.no-print{ display:none !important; }
+  body{ background:#fff; }
+  .layout{ padding:0; }
+  .card{ box-shadow:none; }
+  *{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">SGC · REG-014</div>
+  <div class="nav-links">
+    <a data-target="movimientos" class="active">Movimientos</a>
+    <a data-target="maestros">Maestros</a>
+  </div>
+  <div class="nav-end no-print">
+    <span id="liveDot"></span>
+    <span id="syncStatus">Cargando…</span>
+    <button class="nav-btn" id="btnActualizar">Actualizar</button>
+    <button class="nav-btn" id="btnImprimir">Imprimir</button>
+  </div>
+</nav>
+
+<div class="layout">
+
+  <!-- ================= ENCABEZADO GENERAL ================= -->
+  <div class="doc-block" id="encabezado">
+    <div class="card">
+      <div class="doc-header">
+        <div class="doc-logo">BT</div>
+        <div class="doc-title-col">
+          <div class="doc-title">Registro de Movimientos de Transporte</div>
+          <div class="doc-subtitle">Logística — Vehículos y Traslados</div>
+        </div>
+        <div class="doc-meta">
+          <div class="meta-cell top">
+            <div class="meta-label">Aprobación</div>
+            <input class="meta-input" type="text" id="metaAprobacion" placeholder="dd/mm/aaaa">
+          </div>
+          <div class="meta-cell top">
+            <div class="meta-label">Entrada en vigor</div>
+            <input class="meta-input" type="text" id="metaVigor" placeholder="dd/mm/aaaa">
+          </div>
+          <div class="meta-cell">
+            <div class="meta-label">Código</div>
+            <div class="meta-value">REG-014</div>
+          </div>
+          <div class="meta-cell">
+            <div class="meta-label">Versión</div>
+            <div class="meta-value">V01</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= HOJA 1: MOVIMIENTOS ================= -->
+  <div class="doc-block section-page active" id="movimientos">
+    <div class="card">
+      <div class="card-body">
+
+        <div class="section-title">Indicadores</div>
+        <div class="kpi-row" id="kpiRow">
+          <div class="kpi-card">
+            <div class="kpi-label">Viajes Totales</div>
+            <div class="kpi-value" id="kpiViajes">0</div>
+            <div class="kpi-sub" id="kpiViajesProm">0 viajes/día prom.</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Km Recorridos</div>
+            <div class="kpi-value" id="kpiKm">0</div>
+            <div class="kpi-sub" id="kpiKmProm">0 km/día prom.</div>
+          </div>
+        </div>
+
+        <div class="section-title">Movimientos Diarios</div>
+        <div id="diasContainer"></div>
+        <button class="btn-add-row no-print" id="btnNuevoDia" style="margin-top:12px;">+ Nuevo Día</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= HOJA 2: MAESTROS ================= -->
+  <div class="doc-block section-page" id="maestros">
+    <div class="card">
+      <div class="card-body">
+
+        <div class="section-title">Punto Fijo — Biotrom</div>
+        <div class="table-scroll" style="margin-bottom:26px;">
+          <table>
+            <thead><tr><th>Nombre</th><th>Ubicación (dirección)</th></tr></thead>
+            <tbody id="tbodyBiotrom"></tbody>
+          </table>
+        </div>
+
+        <div class="section-title">Maestro — Centros de Salud</div>
+        <div class="table-scroll" style="margin-bottom:16px;">
+          <table>
+            <thead><tr><th style="width:26px;"></th><th>Nombre</th><th>Ubicación (dirección)</th><th style="width:36px;" class="no-print"></th></tr></thead>
+            <tbody id="tbodySalud"></tbody>
+          </table>
+        </div>
+        <button class="btn-add-row no-print" data-cat="salud" style="margin-bottom:26px;">+ Agregar Centro de Salud</button>
+
+        <div class="section-title">Maestro — Encomiendas</div>
+        <div class="table-scroll" style="margin-bottom:16px;">
+          <table>
+            <thead><tr><th style="width:26px;"></th><th>Nombre</th><th>Ubicación (dirección)</th><th style="width:36px;" class="no-print"></th></tr></thead>
+            <tbody id="tbodyEncomiendas"></tbody>
+          </table>
+        </div>
+        <button class="btn-add-row no-print" data-cat="encomiendas" style="margin-bottom:26px;">+ Agregar Encomienda</button>
+
+        <div class="section-title">Maestro — Otros (Esterilización, etc.)</div>
+        <div class="table-scroll" style="margin-bottom:16px;">
+          <table>
+            <thead><tr><th style="width:26px;"></th><th>Nombre</th><th>Ubicación (dirección)</th><th style="width:36px;" class="no-print"></th></tr></thead>
+            <tbody id="tbodyOtros"></tbody>
+          </table>
+        </div>
+        <button class="btn-add-row no-print" data-cat="otros">+ Agregar Otro</button>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   CONFIG / FIREBASE / LOCALSTORAGE
+============================================================ */
+const FB_URL = "https://biotrom-carga-maquina-default-rtdb.firebaseio.com";
+const FB_PATH = "/reg014";
+const LS_KEY = "REG014_v1";
+let lastTs = 0;
+
+async function fbGet(path){
+  const r = await fetch(FB_URL + path + ".json");
+  if(!r.ok) throw new Error(r.status);
+  return r.json();
+}
+async function fbSet(path, data){
+  const r = await fetch(FB_URL + path + ".json", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  });
+  if(!r.ok) throw new Error(r.status);
+  return r.json();
+}
+function lsGet(k){ try{ return JSON.parse(localStorage.getItem(k)||"null"); }catch(e){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+
+function setSyncStatus(text, cls){
+  const el = document.getElementById("syncStatus");
+  el.textContent = text;
+  el.className = cls || "";
+  document.getElementById("liveDot").classList.toggle("on", cls === "sync-ok");
+}
+
+/* ============================================================
+   PUNTO FIJO BIOTROM (siempre disponible antes de los maestros,
+   editable en la hoja Maestros para poder chequear/corregir la dirección)
+============================================================ */
+const BIOTROM_ID = "__biotrom__";
+const BIOTROM_DEFAULT = {
+  id: BIOTROM_ID,
+  nombre: "Biotrom (Planta - ADJ)",
+  ubicacion: "General Urquiza 428, C1215ADJ, Cdad. Autónoma de Buenos Aires"
+};
+
+/* ============================================================
+   DATA MODEL
+============================================================ */
+let DATA = {
+  maestros: { salud: [], encomiendas: [], otros: [] },
+  dias: [],
+  biotrom: { ...BIOTROM_DEFAULT },
+  metaAprobacion: "",
+  metaVigor: ""
+};
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+/* Normaliza la forma de DATA para que nunca falte una propiedad esperada,
+   sin importar lo que haya devuelto Firebase o localStorage. */
+function normalizeData(d){
+  d = (d && typeof d === "object") ? d : {};
+  d.maestros = (d.maestros && typeof d.maestros === "object") ? d.maestros : {};
+  d.maestros.salud = Array.isArray(d.maestros.salud) ? d.maestros.salud : [];
+  d.maestros.encomiendas = Array.isArray(d.maestros.encomiendas) ? d.maestros.encomiendas : [];
+  d.maestros.otros = Array.isArray(d.maestros.otros) ? d.maestros.otros : [];
+  d.biotrom = (d.biotrom && typeof d.biotrom === "object") ? d.biotrom : { ...BIOTROM_DEFAULT };
+  d.biotrom.id = BIOTROM_ID;
+  d.biotrom.nombre = d.biotrom.nombre || BIOTROM_DEFAULT.nombre;
+  d.biotrom.ubicacion = d.biotrom.ubicacion != null ? d.biotrom.ubicacion : BIOTROM_DEFAULT.ubicacion;
+  d.dias = Array.isArray(d.dias) ? d.dias : [];
+  d.dias.forEach(dia=>{
+    dia.id = dia.id || uid();
+    dia.fecha = dia.fecha || "";
+    dia.usarManual = !!dia.usarManual;
+    dia.horasExtraManual = dia.horasExtraManual != null ? dia.horasExtraManual : "";
+    dia.obs = dia.obs || "";
+    dia.movimientos = Array.isArray(dia.movimientos) ? dia.movimientos : [];
+    dia.movimientos.forEach(mv=>{
+      mv.id = mv.id || uid();
+      mv.horaIni = mv.horaIni || "";
+      mv.horaFin = mv.horaFin || "";
+      mv.partidaId = mv.partidaId || "";
+      mv.llegadaId = mv.llegadaId || "";
+      mv.km = mv.km != null ? mv.km : "";
+      mv.gastos = Array.isArray(mv.gastos) ? mv.gastos : [];
+    });
+  });
+  d.metaAprobacion = d.metaAprobacion || "";
+  d.metaVigor = d.metaVigor || "";
+  return d;
+}
+
+function defaultData(){
+  return {
+    maestros: {
+      salud: [ { id: uid(), nombre: "Hospital Central", ubicacion: "" } ],
+      encomiendas: [ { id: uid(), nombre: "Correo Argentino - Sucursal", ubicacion: "" } ],
+      otros: [ { id: uid(), nombre: "Centro de Esterilización", ubicacion: "" } ]
+    },
+    dias: [],
+    biotrom: { ...BIOTROM_DEFAULT },
+    metaAprobacion: "",
+    metaVigor: ""
+  };
+}
+
+/* ============================================================
+   CARGA INICIAL (Firebase + localStorage fallback)
+============================================================ */
+async function cargarInicial(){
+  setSyncStatus("Cargando…","");
+  let remote = null, local = lsGet(LS_KEY);
+  try{ remote = await fbGet(FB_PATH); }catch(e){ remote = null; }
+  if(remote && remote.data && (!local || (remote.ts||0) >= (local.ts||0))){
+    DATA = normalizeData(remote.data); lastTs = remote.ts||0;
+    lsSet(LS_KEY, { data: DATA, ts: lastTs });
+    setSyncStatus("En vivo","sync-ok");
+  } else if(local && local.data){
+    DATA = normalizeData(local.data); lastTs = local.ts||0;
+    try{ await fbSet(FB_PATH, { data: DATA, ts: lastTs }); setSyncStatus("En vivo","sync-ok"); }
+    catch(e){ setSyncStatus("Sin conexión","sync-error"); }
+  } else {
+    DATA = normalizeData(defaultData()); lastTs = Date.now();
+    const payload = { data: DATA, ts: lastTs };
+    lsSet(LS_KEY, payload);
+    try{ await fbSet(FB_PATH, payload); setSyncStatus("En vivo","sync-ok"); }
+    catch(e){ setSyncStatus("Sin conexión","sync-error"); }
+  }
+  document.getElementById("metaAprobacion").value = DATA.metaAprobacion || "";
+  document.getElementById("metaVigor").value = DATA.metaVigor || "";
+  renderMaestros();
+  renderDias();
+  verificarTodosMaestrosInicial();
+}
+
+/* Verifica, al cargar la página, las direcciones ya guardadas que todavía
+   no tengan coordenadas en caché (una consulta cada ~350ms para no saturar
+   el servicio gratuito de geocodificación). */
+async function verificarTodosMaestrosInicial(){
+  if(DATA.biotrom.ubicacion && DATA.biotrom.ubicacion.trim() && DATA.biotrom._lat == null){
+    await verificarUbicacionMaestro("biotrom", DATA.biotrom.id);
+    await new Promise(res=>setTimeout(res, 350));
+  }
+  const cats = ["salud","encomiendas","otros"];
+  for(const cat of cats){
+    for(const m of DATA.maestros[cat]){
+      if(m.ubicacion && m.ubicacion.trim() && m._lat == null){
+        await verificarUbicacionMaestro(cat, m.id);
+        await new Promise(res=>setTimeout(res, 350));
+      }
+    }
+  }
+}
+
+function persistir(){
+  lastTs = Date.now();
+  const payload = { data: DATA, ts: lastTs };
+  lsSet(LS_KEY, payload);
+  setSyncStatus("Guardando…","");
+  fbSet(FB_PATH, payload).then(()=>{
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2,"0");
+    const mm = String(now.getMinutes()).padStart(2,"0");
+    const ss = String(now.getSeconds()).padStart(2,"0");
+    setSyncStatus("Guardado "+hh+":"+mm+":"+ss,"sync-ok");
+    setTimeout(()=>{ setSyncStatus("En vivo","sync-ok"); }, 2000);
+  }).catch(()=>{ setSyncStatus("Sin conexión","sync-error"); });
+}
+
+setInterval(async ()=>{
+  try{
+    const remote = await fbGet(FB_PATH);
+    if(remote && remote.data && (remote.ts||0) > lastTs){
+      DATA = normalizeData(remote.data); lastTs = remote.ts;
+      lsSet(LS_KEY, { data: DATA, ts: lastTs });
+      renderMaestros(); renderDias();
+    }
+    setSyncStatus("En vivo","sync-ok");
+  }catch(e){
+    setSyncStatus("Sin conexión","sync-error");
+  }
+}, 10000);
+
+/* ============================================================
+   AUTOGROW TEXTAREAS
+============================================================ */
+function autoGrow(el){ el.style.height="auto"; el.style.height=el.scrollHeight+"px"; }
+document.addEventListener("input", e=>{
+  if(e.target.classList.contains("cta")) autoGrow(e.target);
+});
+
+/* ============================================================
+   UTILIDADES: FECHA, HORA, MONEDA
+============================================================ */
+function maskDate(input){
+  input.addEventListener("input", ()=>{
+    let v = input.value.replace(/\D/g,"").slice(0,6);
+    let out = v;
+    if(v.length > 4) out = v.slice(0,2)+"/"+v.slice(2,4)+"/"+v.slice(4);
+    else if(v.length > 2) out = v.slice(0,2)+"/"+v.slice(2);
+    input.value = out;
+  });
+}
+function parseDiaKey(fecha){
+  const m = (fecha||"").match(/^(\d{2})\/(\d{2})\/(\d{2})$/);
+  if(!m) return 0;
+  return parseInt("20"+m[3]+m[2]+m[1], 10);
+}
+function timeToMin(t){
+  if(!t) return null;
+  const [h,m] = t.split(":").map(Number);
+  return h*60 + (m||0);
+}
+function formatARS(n){
+  n = Number(n)||0;
+  return "$" + n.toLocaleString("es-AR", { minimumFractionDigits:2, maximumFractionDigits:2 });
+}
+function formatMonto(n){
+  n = Number(n)||0;
+  return n.toLocaleString("es-AR", { minimumFractionDigits:2, maximumFractionDigits:2 });
+}
+function parseMonto(str){
+  if(str == null || str === "") return 0;
+  const limpio = String(str).replace(/\./g,"").replace(",",".");
+  const n = parseFloat(limpio);
+  return isNaN(n) ? 0 : n;
+}
+/* Formatea en vivo mientras el usuario escribe: agrega el punto de miles
+   apenas se supera 1000, permite una coma decimal (hasta 2 dígitos). */
+function liveFormatMonto(raw){
+  let clean = String(raw).replace(/[^\d,]/g,"");
+  const idx = clean.indexOf(",");
+  let intPart, decPart;
+  if(idx === -1){ intPart = clean; decPart = null; }
+  else { intPart = clean.slice(0,idx); decPart = clean.slice(idx+1).replace(/,/g,"").slice(0,2); }
+  intPart = intPart.replace(/^0+(?=\d)/,"");
+  intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  return decPart !== null ? intPart + "," + decPart : intPart;
+}
+function findMaestro(id){
+  if(DATA.biotrom && id === DATA.biotrom.id) return DATA.biotrom;
+  const all = [...DATA.maestros.salud, ...DATA.maestros.encomiendas, ...DATA.maestros.otros];
+  return all.find(m => m.id === id) || null;
+}
+
+const GASTO_TIPOS = ["Estacionamiento","Combustible / Nafta","Peaje","Otro"];
+
+/* ============================================================
+   CALCULO AUTOMATICO DE KM ENTRE UBICACIONES (por dirección)
+   Usa OpenRouteService (openrouteservice.org) para geocodificar la
+   dirección cargada en el maestro (nunca se ven ni cargan coordenadas
+   a mano) y para calcular la distancia real de ruta en auto por calle.
+   Si el servicio no responde, cae a una estimación por línea recta.
+============================================================ */
+const ORS_API_KEY = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjY2NjdmODZhNmQ1NzQwOGY5YWEyMGU2Zjg5M2RmNjBkIiwiaCI6Im11cm11cjY0In0=";
+const ORS_BASE = "https://api.openrouteservice.org";
+const FACTOR_RUTA = 1.35; // corrige la distancia recta cuando no se puede calcular la ruta real (respaldo)
+
+/* Distancia de ruta real (por calles) via OpenRouteService Directions.
+   Si el servicio no responde, devuelve null y se usa la línea recta
+   corregida como respaldo. */
+async function distanciaRutaKm(cp, cl){
+  try{
+    const url = `${ORS_BASE}/v2/directions/driving-car?api_key=${encodeURIComponent(ORS_API_KEY)}&start=${cp.lng},${cp.lat}&end=${cl.lng},${cl.lat}`;
+    const r = await fetch(url);
+    if(!r.ok) return null;
+    const data = await r.json();
+    const f = data && data.features && data.features[0];
+    if(f && f.properties && f.properties.summary) return f.properties.summary.distance / 1000;
+  }catch(e){}
+  return null;
+}
+
+async function geocodeDireccion(direccion){
+  if(!direccion || !direccion.trim()) return { error: "sin-direccion" };
+  try{
+    const url = `${ORS_BASE}/geocode/search?api_key=${encodeURIComponent(ORS_API_KEY)}&text=${encodeURIComponent(direccion)}&boundary.country=AR&size=1`;
+    const r = await fetch(url);
+    if(!r.ok) return { error: "http-"+r.status };
+    const data = await r.json();
+    const f = data && data.features && data.features[0];
+    if(f) return { lat: f.geometry.coordinates[1], lng: f.geometry.coordinates[0], nombre: f.properties.label };
+    return { error: "no-encontrada" };
+  }catch(e){
+    return { error: "red", detalle: e && e.message ? e.message : "" };
+  }
+}
+async function coordsDeMaestro(m){
+  if(!m) return { error: "sin-maestro" };
+  if(m._lat != null && m._lng != null) return { lat: m._lat, lng: m._lng };
+  const c = await geocodeDireccion(m.ubicacion);
+  if(c && !c.error){ m._lat = c.lat; m._lng = c.lng; }
+  return c;
+}
+function haversineKm(lat1,lng1,lat2,lng2){
+  const R = 6371;
+  const dLat = (lat2-lat1) * Math.PI/180;
+  const dLng = (lng2-lng1) * Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+function mensajeErrorCoords(c, nombre){
+  if(!c || !c.error) return "";
+  if(c.error === "sin-direccion") return `Cargá la dirección de "${nombre}" en Maestros.`;
+  if(c.error === "no-encontrada") return `No se encontró la dirección de "${nombre}". Probá con calle, altura y localidad.`;
+  const det = c.detalle ? ` (detalle técnico: ${c.detalle})` : "";
+  return `No se pudo consultar la dirección de "${nombre}" (sin conexión o servicio no disponible)${det}.`;
+}
+async function autoCalcularKm(mv){
+  const p = findMaestro(mv.partidaId);
+  const l = findMaestro(mv.llegadaId);
+  if(!p || !l) return;
+  const kmInputEl = diasContainer.querySelector(`tr[data-mv-id="${mv.id}"] input[data-field="km"]`);
+  const statusEl = diasContainer.querySelector(`tr[data-mv-id="${mv.id}"] .km-status`);
+  if(kmInputEl) kmInputEl.value = "...";
+  if(statusEl){ statusEl.textContent = ""; statusEl.title = ""; }
+  const cp = await coordsDeMaestro(p);
+  const cl = await coordsDeMaestro(l);
+  const err = mensajeErrorCoords(cp, p.nombre) || mensajeErrorCoords(cl, l.nombre);
+  if(err){
+    if(kmInputEl) kmInputEl.value = mv.km || "";
+    if(statusEl){ statusEl.textContent = "⚠"; statusEl.title = err; }
+    return;
+  }
+  const recta = haversineKm(cp.lat, cp.lng, cl.lat, cl.lng);
+  const ruta = await distanciaRutaKm(cp, cl);
+  if(ruta != null){
+    mv.km = (Math.round(ruta * 10) / 10).toFixed(1);
+    if(statusEl){ statusEl.textContent = ""; statusEl.title = ""; }
+  } else {
+    mv.km = (Math.round(recta * FACTOR_RUTA * 10) / 10).toFixed(1);
+    if(statusEl){
+      statusEl.textContent = "≈";
+      statusEl.style.color = "var(--warn-text)";
+      statusEl.title = "Estimado por distancia recta (el servicio de rutas no respondió). Podés corregirlo a mano si conocés el km real.";
+    }
+  }
+  renderDias();
+  persistir();
+}
+
+/* Verifica en vivo, desde la hoja Maestros, si una dirección se puede
+   ubicar en el mapa. Muestra ✓ (con el nombre resuelto) o ⚠ (con el motivo). */
+async function verificarUbicacionMaestro(cat, id){
+  const m = cat === "biotrom" ? DATA.biotrom : (DATA.maestros[cat] && DATA.maestros[cat].find(x=>x.id===id));
+  if(!m) return;
+  const statusEl = document.querySelector(`#maestros tr[data-cat="${cat}"][data-id="${id}"] .geo-status`);
+  if(!m.ubicacion || !m.ubicacion.trim()){
+    m._lat = null; m._lng = null;
+    if(statusEl){ statusEl.textContent = ""; statusEl.title = ""; }
+    return;
+  }
+  if(statusEl){ statusEl.textContent = "…"; statusEl.title = "Verificando…"; statusEl.style.color = "var(--text-3)"; }
+  const c = await geocodeDireccion(m.ubicacion);
+  if(c && !c.error){
+    m._lat = c.lat; m._lng = c.lng;
+    if(statusEl){
+      statusEl.textContent = "✓";
+      statusEl.style.color = "var(--ok-text)";
+      statusEl.title = "Ubicado en el mapa: " + (c.nombre || (c.lat.toFixed(5)+", "+c.lng.toFixed(5)));
+    }
+  } else {
+    m._lat = null; m._lng = null;
+    if(statusEl){
+      statusEl.textContent = "⚠";
+      statusEl.style.color = "var(--err-text)";
+      statusEl.title = mensajeErrorCoords(c, m.nombre || "este lugar");
+    }
+  }
+}
+
+const ICON_CAMERA = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 8.5C4 7.4 4.9 6.5 6 6.5H8L9.2 4.7C9.4 4.3 9.8 4 10.3 4H13.7C14.2 4 14.6 4.3 14.8 4.7L16 6.5H18C19.1 6.5 20 7.4 20 8.5V17.5C20 18.6 19.1 19.5 18 19.5H6C4.9 19.5 4 18.6 4 17.5V8.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.2" stroke="currentColor" stroke-width="1.6"/></svg>';
+
+/* ============================================================
+   RENDER: MAESTROS
+============================================================ */
+function renderMaestros(){
+  renderBiotromRow();
+  renderMaestroTabla("salud","tbodySalud");
+  renderMaestroTabla("encomiendas","tbodyEncomiendas");
+  renderMaestroTabla("otros","tbodyOtros");
+  poblarSelectsPuntos();
+}
+function renderBiotromRow(){
+  const tbody = document.getElementById("tbodyBiotrom");
+  const m = DATA.biotrom;
+  tbody.innerHTML = `
+    <tr data-cat="biotrom" data-id="${m.id}">
+      <td><input type="text" value="${escAttr(m.nombre)}" data-field="nombre" placeholder="Nombre"></td>
+      <td>
+        <div style="display:flex; align-items:center; gap:4px;">
+          <input type="text" value="${escAttr(m.ubicacion)}" data-field="ubicacion" placeholder="Dirección" style="flex:1;">
+          <span class="geo-status no-print" title="" style="font-size:13px; width:16px; text-align:center; flex-shrink:0; cursor:default;"></span>
+        </div>
+      </td>
+    </tr>
+  `;
+}
+function renderMaestroTabla(cat, tbodyId){
+  const tbody = document.getElementById(tbodyId);
+  const lista = DATA.maestros[cat];
+  if(lista.length === 0){
+    tbody.innerHTML = '<tr><td colspan="4" class="empty-hint">Sin registros.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = lista.map((m,i)=>`
+    <tr data-cat="${cat}" data-id="${m.id}">
+      <td class="rownum">${i+1}</td>
+      <td><input type="text" value="${escAttr(m.nombre)}" data-field="nombre" placeholder="Nombre"></td>
+      <td>
+        <div style="display:flex; align-items:center; gap:4px;">
+          <input type="text" value="${escAttr(m.ubicacion)}" data-field="ubicacion" placeholder="Dirección" style="flex:1;">
+          <span class="geo-status no-print" title="" style="font-size:13px; width:16px; text-align:center; flex-shrink:0; cursor:default;"></span>
+        </div>
+      </td>
+      <td class="no-print" style="text-align:center;"><button class="btn-del-row" data-action="del-maestro">×</button></td>
+    </tr>
+  `).join("");
+}
+function escAttr(s){ return (s==null?"":String(s)).replace(/"/g,"&quot;"); }
+
+document.querySelectorAll(".btn-add-row[data-cat]").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    const cat = btn.getAttribute("data-cat");
+    DATA.maestros[cat].push({ id: uid(), nombre:"", ubicacion:"" });
+    renderMaestros();
+    persistir();
+  });
+});
+
+document.getElementById("maestros").addEventListener("input", e=>{
+  const tr = e.target.closest("tr[data-id]");
+  if(!tr) return;
+  const cat = tr.getAttribute("data-cat");
+  const id = tr.getAttribute("data-id");
+  const field = e.target.getAttribute("data-field");
+  if(!field) return;
+  const item = cat === "biotrom" ? DATA.biotrom : DATA.maestros[cat].find(m=>m.id===id);
+  if(item){ item[field] = e.target.value; }
+});
+document.getElementById("maestros").addEventListener("change", e=>{
+  persistir(); poblarSelectsPuntos(); renderDias();
+  const field = e.target.getAttribute && e.target.getAttribute("data-field");
+  if(field === "ubicacion"){
+    const tr = e.target.closest("tr[data-id]");
+    if(tr) verificarUbicacionMaestro(tr.getAttribute("data-cat"), tr.getAttribute("data-id"));
+  }
+});
+document.getElementById("maestros").addEventListener("click", e=>{
+  if(e.target.getAttribute("data-action") === "del-maestro"){
+    const tr = e.target.closest("tr[data-id]");
+    const cat = tr.getAttribute("data-cat");
+    const id = tr.getAttribute("data-id");
+    if(!confirm("¿Eliminar este registro del maestro?")) return;
+    DATA.maestros[cat] = DATA.maestros[cat].filter(m=>m.id!==id);
+    renderMaestros();
+    renderDias();
+    persistir();
+  }
+});
+
+function poblarSelectsPuntos(){
+  document.querySelectorAll("select.pt-select").forEach(sel=>{
+    const current = sel.value;
+    sel.innerHTML = '<option value="">— Seleccionar —</option>' +
+      `<option value="${DATA.biotrom.id}">${escAttr(DATA.biotrom.nombre)}</option>` +
+      optgroupHtml("Centros de Salud", DATA.maestros.salud) +
+      optgroupHtml("Encomiendas", DATA.maestros.encomiendas) +
+      optgroupHtml("Otros", DATA.maestros.otros);
+    if(current) sel.value = current;
+  });
+}
+function optgroupHtml(label, lista){
+  if(!lista.length) return "";
+  return `<optgroup label="${label}">` +
+    lista.map(m=>`<option value="${m.id}">${escAttr(m.nombre||"(sin nombre)")}</option>`).join("") +
+    "</optgroup>";
+}
+
+/* ============================================================
+   KPIs
+============================================================ */
+function renderKPIs(){
+  const diasConMov = DATA.dias.filter(d => d.movimientos.length > 0);
+  const totalViajes = DATA.dias.reduce((acc,d)=>acc + d.movimientos.length, 0);
+  const totalKm = DATA.dias.reduce((acc,d)=>acc + d.movimientos.reduce((a,mv)=>a + (Number(mv.km)||0), 0), 0);
+  const diasCount = diasConMov.length;
+  const promViajes = diasCount ? totalViajes / diasCount : 0;
+  const promKm = diasCount ? totalKm / diasCount : 0;
+
+  document.getElementById("kpiViajes").textContent = totalViajes;
+  document.getElementById("kpiViajesProm").textContent = promViajes.toFixed(1) + " viajes/día prom.";
+  document.getElementById("kpiKm").textContent = totalKm.toFixed(1) + " km";
+  document.getElementById("kpiKmProm").textContent = promKm.toFixed(1) + " km/día prom.";
+}
+
+/* ============================================================
+   RENDER: DIAS / MOVIMIENTOS
+============================================================ */
+function computeDiaTotals(dia){
+  let kmTotal = 0, gastoTotal = 0;
+  let minIni = null, maxFin = null;
+  dia.movimientos.forEach(mv=>{
+    kmTotal += Number(mv.km) || 0;
+    (mv.gastos||[]).forEach(g=>{ gastoTotal += Number(g.monto) || 0; });
+    const ini = timeToMin(mv.horaIni);
+    const fin = timeToMin(mv.horaFin);
+    if(ini !== null && (minIni === null || ini < minIni)) minIni = ini;
+    if(fin !== null && (maxFin === null || fin > maxFin)) maxFin = fin;
+  });
+  const NORMAL_INI = 8*60, NORMAL_FIN = 19*60;
+  let heAuto = 0;
+  if(minIni !== null) heAuto += Math.max(0, NORMAL_INI - minIni) / 60;
+  if(maxFin !== null) heAuto += Math.max(0, maxFin - NORMAL_FIN) / 60;
+  return { kmTotal, gastoTotal, heAuto };
+}
+
+function renderDias(){
+  const cont = document.getElementById("diasContainer");
+  if(DATA.dias.length === 0){
+    cont.innerHTML = '<div class="empty-hint">Sin días registrados. Usá "+ Nuevo Día" para comenzar.</div>';
+    renderKPIs();
+    return;
+  }
+  const ordenados = [...DATA.dias].sort((a,b)=> parseDiaKey(b.fecha) - parseDiaKey(a.fecha));
+  cont.innerHTML = ordenados.map(dia => renderDiaGroup(dia)).join("");
+  ordenados.forEach(dia=>{
+    const wrap = cont.querySelector(`[data-dia-id="${dia.id}"] .date-mask`);
+    if(wrap) maskDate(wrap);
+  });
+  cont.querySelectorAll("textarea.cta").forEach(autoGrow);
+  poblarSelectsPuntos();
+  cont.querySelectorAll(`[data-dia-id]`).forEach(g=>{
+    const diaId = g.getAttribute("data-dia-id");
+    const dia = DATA.dias.find(d=>d.id===diaId);
+    if(!dia) return;
+    dia.movimientos.forEach(mv=>{
+      const selP = g.querySelector(`select.pt-select[data-mv-id="${mv.id}"][data-field="partidaId"]`);
+      const selL = g.querySelector(`select.pt-select[data-mv-id="${mv.id}"][data-field="llegadaId"]`);
+      if(selP) selP.value = mv.partidaId || "";
+      if(selL) selL.value = mv.llegadaId || "";
+    });
+  });
+  renderKPIs();
+}
+
+function renderDiaGroup(dia){
+  const tot = computeDiaTotals(dia);
+  const heMostrado = dia.usarManual ? (Number(dia.horasExtraManual)||0) : Math.round(tot.heAuto*100)/100;
+  return `
+  <div class="dia-group" data-dia-id="${dia.id}">
+    <div class="dia-header">
+      <div class="dia-field">
+        <span class="lbl">Día</span>
+        <div class="date-mask-wrap">
+          <input type="text" class="date-mask" maxlength="8" placeholder="dd/mm/aa" value="${escAttr(dia.fecha)}" data-field="fecha">
+          <button class="cal-btn no-print" title="Elegir fecha">▦
+            <input type="date" data-field="fecha-native">
+          </button>
+        </div>
+      </div>
+      <div class="dia-field">
+        <span class="lbl">Horas Extra</span>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <input type="text" class="he-input" data-field="horasExtraManual" value="${dia.usarManual ? escAttr(dia.horasExtraManual==null?"":dia.horasExtraManual) : heMostrado.toFixed(2)}" ${dia.usarManual?"":"disabled"} placeholder="0">
+          <label class="chk-wrap no-print"><input type="checkbox" data-field="usarManual" ${dia.usarManual?"checked":""}> Manual</label>
+        </div>
+        <span class="he-auto">${dia.usarManual ? "(editado a mano)" : "(automático)"}</span>
+      </div>
+      <div class="dia-field">
+        <span class="lbl">Km Total del Día</span>
+        <span class="tot-badge">${tot.kmTotal.toFixed(1)} km</span>
+      </div>
+      <div class="dia-field">
+        <span class="lbl">Gastos del Día</span>
+        <span class="tot-badge">${formatARS(tot.gastoTotal)}</span>
+      </div>
+      <div class="spacer"></div>
+      <div class="dia-field no-print">
+        <span class="lbl">&nbsp;</span>
+        <button class="btn btn-danger" data-action="del-dia" style="height:26px;">Eliminar Día</button>
+      </div>
+    </div>
+    <div class="dia-body">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:26px;">#</th>
+              <th style="width:90px;">Hora Inicio</th>
+              <th style="width:90px;">Hora Fin</th>
+              <th>Punto de Partida</th>
+              <th>Punto de Llegada</th>
+              <th style="width:80px;" title="Se calcula solo si Partida y Llegada tienen dirección cargada en Maestros">Km</th>
+              <th>Gastos Extra</th>
+              <th class="no-print" style="width:36px;"></th>
+            </tr>
+          </thead>
+          <tbody>
+            ${dia.movimientos.length === 0
+              ? `<tr><td colspan="8" class="empty-hint">Sin movimientos en este día.</td></tr>`
+              : ordenarPorHoraInicio(dia.movimientos).map((mv,i)=> renderMovRow(dia, mv, i)).join("")}
+          </tbody>
+        </table>
+      </div>
+      <button class="btn-add-row no-print" data-action="add-mov" style="margin-top:8px;">+ Agregar Movimiento</button>
+      <div class="obs-wrap">
+        <span class="lbl">Observaciones</span>
+        <textarea class="cta" rows="1" data-field="obs" placeholder="Observaciones del día...">${dia.obs||""}</textarea>
+      </div>
+    </div>
+  </div>`;
+}
+
+function ordenarPorHoraInicio(movimientos){
+  return [...movimientos].sort((a,b)=>{
+    const ta = timeToMin(a.horaIni), tb = timeToMin(b.horaIni);
+    if(ta === null && tb === null) return 0;
+    if(ta === null) return 1;
+    if(tb === null) return -1;
+    return ta - tb;
+  });
+}
+
+function renderMovRow(dia, mv, idx){
+  return `
+  <tr data-mv-id="${mv.id}">
+    <td class="rownum">${idx+1}</td>
+    <td><input type="time" data-field="horaIni" value="${mv.horaIni||""}"></td>
+    <td><input type="time" data-field="horaFin" value="${mv.horaFin||""}"></td>
+    <td><select class="pt-select" data-field="partidaId" data-mv-id="${mv.id}"></select></td>
+    <td><select class="pt-select" data-field="llegadaId" data-mv-id="${mv.id}"></select></td>
+    <td>
+      <div style="display:flex; align-items:center; gap:3px;">
+        <input type="text" data-field="km" value="${mv.km!=null?mv.km:""}" placeholder="0.0" style="text-align:right;">
+        <button class="btn-light no-print" data-action="recalc-km" title="Recalcular distancia entre puntos" style="height:24px; padding:0 5px; font-size:11px; flex-shrink:0;">↻</button>
+        <span class="km-status no-print" style="color:var(--warn-text); font-size:12px; cursor:default;"></span>
+      </div>
+    </td>
+    <td>
+      <div class="gastos-cell">
+        ${(mv.gastos||[]).map(g=>renderGastoChip(mv.id, g)).join("")}
+        <button class="btn-add-row no-print" data-action="add-gasto" style="width:26px; height:26px; padding:0; font-size:14px;">+</button>
+      </div>
+    </td>
+    <td class="no-print" style="text-align:center;"><button class="btn-del-row" data-action="del-mov">×</button></td>
+  </tr>`;
+}
+
+function renderGastoChip(mvId, g){
+  const thumb = g.foto ? `<img src="${g.foto}" class="thumb no-print thumb-view" title="Ver imagen">` : "";
+  const detalleField = g.tipo === "Otro"
+    ? `<input type="text" data-field="detalle" value="${escAttr(g.detalle||"")}" placeholder="Especificar qué gasto...">`
+    : "";
+  return `
+  <span class="gasto-chip" data-gasto-id="${g.id}" data-mv-id="${mvId}">
+    <select data-field="tipo">
+      ${GASTO_TIPOS.map(t=>`<option value="${t}" ${g.tipo===t?"selected":""}>${t}</option>`).join("")}
+    </select>
+    ${detalleField}
+    <span class="gasto-amt">$<input type="text" data-field="monto" value="${g.monto!=null && g.monto!==""?formatMonto(g.monto):""}" placeholder="0,00"></span>
+    ${thumb}
+    <label class="filebtn no-print" title="Sacar / adjuntar foto">${ICON_CAMERA}<input type="file" accept="image/*" data-field="foto"></label>
+    <button class="btn-del-row no-print" data-action="del-gasto" style="width:18px; height:18px; font-size:11px;">×</button>
+  </span>`;
+}
+
+/* ============================================================
+   EVENTOS: NUEVO DIA / MOVIMIENTOS / GASTOS
+============================================================ */
+document.getElementById("btnNuevoDia").addEventListener("click", ()=>{
+  const hoy = new Date();
+  const dd = String(hoy.getDate()).padStart(2,"0");
+  const mm = String(hoy.getMonth()+1).padStart(2,"0");
+  const aa = String(hoy.getFullYear()).slice(-2);
+  DATA.dias.push({
+    id: uid(), fecha: dd+"/"+mm+"/"+aa, usarManual: false, horasExtraManual: "", obs: "", movimientos: []
+  });
+  renderDias();
+  persistir();
+});
+
+const diasContainer = document.getElementById("diasContainer");
+
+diasContainer.addEventListener("click", e=>{
+  const action = e.target.closest("[data-action]") ? e.target.closest("[data-action]").getAttribute("data-action") : null;
+  const diaEl = e.target.closest("[data-dia-id]");
+  if(!diaEl) return;
+  const dia = DATA.dias.find(d=>d.id===diaEl.getAttribute("data-dia-id"));
+  if(!dia) return;
+
+  if(action === "del-dia"){
+    if(!confirm("¿Eliminar este día y todos sus movimientos?")) return;
+    DATA.dias = DATA.dias.filter(d=>d.id!==dia.id);
+    renderDias(); persistir(); return;
+  }
+  if(action === "add-mov"){
+    dia.movimientos.push({ id: uid(), horaIni:"", horaFin:"", partidaId:"", llegadaId:"", km:"", gastos:[] });
+    renderDias(); persistir(); return;
+  }
+  const mvEl = e.target.closest("tr[data-mv-id]");
+  const mv = mvEl ? dia.movimientos.find(m=>m.id===mvEl.getAttribute("data-mv-id")) : null;
+
+  if(action === "del-mov" && mv){
+    if(!confirm("¿Eliminar este movimiento?")) return;
+    dia.movimientos = dia.movimientos.filter(m=>m.id!==mv.id);
+    renderDias(); persistir(); return;
+  }
+  if(action === "recalc-km" && mv){
+    autoCalcularKm(mv);
+    return;
+  }
+  if(action === "add-gasto" && mv){
+    mv.gastos = mv.gastos || [];
+    mv.gastos.push({ id: uid(), tipo: GASTO_TIPOS[0], monto: "", foto: "" });
+    renderDias(); persistir(); return;
+  }
+  const gastoEl = e.target.closest(".gasto-chip");
+  const gasto = gastoEl && mv ? (mv.gastos||[]).find(g=>g.id===gastoEl.getAttribute("data-gasto-id")) : null;
+  if(action === "del-gasto" && mv && gasto){
+    mv.gastos = mv.gastos.filter(g=>g.id!==gasto.id);
+    renderDias(); persistir(); return;
+  }
+  if(e.target.classList.contains("thumb-view") && gasto && gasto.foto){
+    const w = window.open("");
+    if(w) w.document.write(`<img src="${gasto.foto}" style="max-width:100%;">`);
+  }
+});
+
+diasContainer.addEventListener("input", e=>{
+  const diaEl = e.target.closest("[data-dia-id]");
+  if(!diaEl) return;
+  const dia = DATA.dias.find(d=>d.id===diaEl.getAttribute("data-dia-id"));
+  if(!dia) return;
+  const field = e.target.getAttribute("data-field");
+
+  if(field === "fecha"){ dia.fecha = e.target.value; return; }
+  if(field === "horasExtraManual"){ dia.horasExtraManual = e.target.value; return; }
+  if(field === "obs"){ dia.obs = e.target.value; return; }
+
+  const mvEl = e.target.closest("tr[data-mv-id]");
+  const mv = mvEl ? dia.movimientos.find(m=>m.id===mvEl.getAttribute("data-mv-id")) : null;
+  if(mv){
+    if(field === "horaIni"){ mv.horaIni = e.target.value; }
+    else if(field === "horaFin"){ mv.horaFin = e.target.value; }
+    else if(field === "partidaId"){ mv.partidaId = e.target.value; if(mv.partidaId && mv.llegadaId) autoCalcularKm(mv); }
+    else if(field === "llegadaId"){ mv.llegadaId = e.target.value; if(mv.partidaId && mv.llegadaId) autoCalcularKm(mv); }
+    else if(field === "km"){ mv.km = e.target.value; }
+    const gastoEl = e.target.closest(".gasto-chip");
+    const gasto = gastoEl ? (mv.gastos||[]).find(g=>g.id===gastoEl.getAttribute("data-gasto-id")) : null;
+    if(gasto){
+      if(field === "tipo") gasto.tipo = e.target.value;
+      if(field === "detalle") gasto.detalle = e.target.value;
+      if(field === "monto"){
+        const formateado = liveFormatMonto(e.target.value);
+        e.target.value = formateado;
+        gasto.monto = formateado;
+        const pos = e.target.value.length;
+        e.target.setSelectionRange(pos, pos);
+      }
+    }
+  }
+});
+
+/* Formateo de monto ($ . miles , centavos) al enfocar/desenfocar */
+diasContainer.addEventListener("focusin", e=>{
+  if(e.target.getAttribute && e.target.getAttribute("data-field") === "monto"){
+    const gastoEl = e.target.closest(".gasto-chip");
+    const mvEl = e.target.closest("tr[data-mv-id]");
+    const diaEl = e.target.closest("[data-dia-id]");
+    if(!gastoEl || !mvEl || !diaEl) return;
+    const dia = DATA.dias.find(d=>d.id===diaEl.getAttribute("data-dia-id"));
+    const mv = dia && dia.movimientos.find(m=>m.id===mvEl.getAttribute("data-mv-id"));
+    const gasto = mv && (mv.gastos||[]).find(g=>g.id===gastoEl.getAttribute("data-gasto-id"));
+    if(gasto){
+      const n = parseMonto(gasto.monto);
+      e.target.value = n === 0 ? "" : String(n).replace(".",",");
+    }
+  }
+});
+diasContainer.addEventListener("focusout", e=>{
+  if(e.target.getAttribute && e.target.getAttribute("data-field") === "monto"){
+    const gastoEl = e.target.closest(".gasto-chip");
+    const mvEl = e.target.closest("tr[data-mv-id]");
+    const diaEl = e.target.closest("[data-dia-id]");
+    if(!gastoEl || !mvEl || !diaEl) return;
+    const dia = DATA.dias.find(d=>d.id===diaEl.getAttribute("data-dia-id"));
+    const mv = dia && dia.movimientos.find(m=>m.id===mvEl.getAttribute("data-mv-id"));
+    const gasto = mv && (mv.gastos||[]).find(g=>g.id===gastoEl.getAttribute("data-gasto-id"));
+    if(gasto){
+      const n = parseMonto(e.target.value);
+      gasto.monto = n;
+      e.target.value = n === 0 ? "" : formatMonto(n);
+      renderKPIs();
+      const totBadges = diaEl.querySelectorAll(".tot-badge");
+      const tot = computeDiaTotals(dia);
+      if(totBadges[1]) totBadges[1].textContent = formatARS(tot.gastoTotal);
+      persistir();
+    }
+  }
+});
+
+diasContainer.addEventListener("change", e=>{
+  const diaEl = e.target.closest("[data-dia-id]");
+  if(!diaEl) return;
+  const dia = DATA.dias.find(d=>d.id===diaEl.getAttribute("data-dia-id"));
+  if(!dia) return;
+  const field = e.target.getAttribute("data-field");
+
+  if(field === "fecha-native" && e.target.value){
+    const [y,m,d] = e.target.value.split("-");
+    dia.fecha = d+"/"+m+"/"+y.slice(-2);
+    renderDias(); persistir(); return;
+  }
+  if(field === "usarManual"){
+    dia.usarManual = e.target.checked;
+    if(dia.usarManual){
+      const t = computeDiaTotals(dia);
+      dia.horasExtraManual = (Math.round(t.heAuto*100)/100).toFixed(2);
+    }
+    renderDias(); persistir(); return;
+  }
+
+  const mvEl = e.target.closest("tr[data-mv-id]");
+  const mv = mvEl ? dia.movimientos.find(m=>m.id===mvEl.getAttribute("data-mv-id")) : null;
+  const gastoEl = e.target.closest(".gasto-chip");
+  const gasto = (mv && gastoEl) ? (mv.gastos||[]).find(g=>g.id===gastoEl.getAttribute("data-gasto-id")) : null;
+
+  if(field === "foto" && gasto && e.target.files && e.target.files[0]){
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      gasto.foto = reader.result;
+      renderDias(); persistir();
+    };
+    reader.readAsDataURL(e.target.files[0]);
+    return;
+  }
+  if(field === "monto") return; /* manejado por focusout */
+  renderDias();
+  persistir();
+});
+
+/* ============================================================
+   META (Aprobacion / Vigor)
+============================================================ */
+maskDate(document.getElementById("metaAprobacion"));
+maskDate(document.getElementById("metaVigor"));
+document.getElementById("metaAprobacion").addEventListener("change", e=>{ DATA.metaAprobacion = e.target.value; persistir(); });
+document.getElementById("metaVigor").addEventListener("change", e=>{ DATA.metaVigor = e.target.value; persistir(); });
+
+/* ============================================================
+   NAV: HOJAS SEPARADAS (TABS)
+============================================================ */
+document.querySelectorAll(".nav-links a").forEach(a=>{
+  a.addEventListener("click", ()=>{
+    const targetId = a.getAttribute("data-target");
+    document.querySelectorAll(".nav-links a").forEach(x=>x.classList.remove("active"));
+    document.querySelectorAll(".section-page").forEach(x=>x.classList.remove("active"));
+    a.classList.add("active");
+    document.getElementById(targetId).classList.add("active");
+    window.scrollTo({ top:0, behavior:"instant" in window ? "instant" : "auto" });
+  });
+});
+
+/* ============================================================
+   BOTONES NAV: ACTUALIZAR / IMPRIMIR
+============================================================ */
+document.getElementById("btnActualizar").addEventListener("click", async ()=>{
+  setSyncStatus("Cargando…","");
+  try{
+    const remote = await fbGet(FB_PATH);
+    if(remote && remote.data){
+      DATA = normalizeData(remote.data); lastTs = remote.ts||Date.now();
+      lsSet(LS_KEY, { data: DATA, ts: lastTs });
+      document.getElementById("metaAprobacion").value = DATA.metaAprobacion || "";
+      document.getElementById("metaVigor").value = DATA.metaVigor || "";
+      renderMaestros(); renderDias();
+    }
+    setSyncStatus("En vivo","sync-ok");
+  }catch(e){
+    setSyncStatus("Sin conexión","sync-error");
+  }
+});
+document.getElementById("btnImprimir").addEventListener("click", ()=> window.print());
+
+/* ============================================================
+   INIT
+============================================================ */
+cargarInicial();
+</script>
+</body>
+</html>
