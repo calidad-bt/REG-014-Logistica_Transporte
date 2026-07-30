@@ -352,11 +352,11 @@ input.search-input:focus{outline:none; border-color:var(--accent); background:#f
         <div class="doc-meta">
           <div class="meta-cell top">
             <div class="meta-label">Aprobación</div>
-            <input class="meta-input" type="text" id="metaAprobacion" placeholder="dd/mm/aaaa">
+            <input class="meta-input" type="text" id="metaAprobacion" placeholder="dd/mm/aaaa" inputmode="numeric">
           </div>
           <div class="meta-cell top">
             <div class="meta-label">Entrada en vigor</div>
-            <input class="meta-input" type="text" id="metaVigor" placeholder="dd/mm/aaaa">
+            <input class="meta-input" type="text" id="metaVigor" placeholder="dd/mm/aaaa" inputmode="numeric">
           </div>
           <div class="meta-cell">
             <div class="meta-label">Código</div>
@@ -399,7 +399,7 @@ input.search-input:focus{outline:none; border-color:var(--accent); background:#f
           <div class="dia-field">
             <span class="lbl">Desde</span>
             <div class="date-mask-wrap">
-              <input type="text" class="date-mask" id="migrarDesde" maxlength="8" placeholder="dd/mm/aa">
+              <input type="text" class="date-mask" id="migrarDesde" maxlength="8" placeholder="dd/mm/aa" inputmode="numeric">
               <button class="cal-btn" type="button" title="Elegir fecha">▦
                 <input type="date" id="migrarDesdeNative">
               </button>
@@ -408,7 +408,7 @@ input.search-input:focus{outline:none; border-color:var(--accent); background:#f
           <div class="dia-field">
             <span class="lbl">Hasta</span>
             <div class="date-mask-wrap">
-              <input type="text" class="date-mask" id="migrarHasta" maxlength="8" placeholder="dd/mm/aa">
+              <input type="text" class="date-mask" id="migrarHasta" maxlength="8" placeholder="dd/mm/aa" inputmode="numeric">
               <button class="cal-btn" type="button" title="Elegir fecha">▦
                 <input type="date" id="migrarHastaNative">
               </button>
@@ -763,6 +763,17 @@ function liveFormatMonto(raw){
   intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   return decPart !== null ? intPart + "," + decPart : intPart;
 }
+/* Compara si dos puntos (partida/llegada) refieren al mismo lugar:
+   mismo maestro (mismo id) o mismo texto libre (sin importar mayúsc./espacios). */
+function esMismoPunto(idNuevo, libreNuevo, idOtro, libreOtro){
+  if(idNuevo && idOtro) return idNuevo === idOtro;
+  if(!idNuevo && !idOtro){
+    const a = (libreNuevo||"").trim().toLowerCase();
+    const b = (libreOtro||"").trim().toLowerCase();
+    return a !== "" && a === b;
+  }
+  return false;
+}
 function findMaestro(id){
   if(DATA.biotrom && id === DATA.biotrom.id) return DATA.biotrom;
   const all = [...DATA.maestros.salud, ...DATA.maestros.encomiendas, ...DATA.maestros.otros];
@@ -981,6 +992,20 @@ function renderMaestroTabla(cat, tbodyId){
   `;
   }).join("");
 }
+function normalizarDireccion(s){ return (s||"").trim().toLowerCase().replace(/\s+/g," "); }
+/* Busca si una dirección ya está usada por otro maestro (o Biotrom),
+   excluyendo el propio registro que se está editando. */
+function buscarDireccionDuplicada(direccionNueva, excluirCat, excluirId){
+  const dirNorm = normalizarDireccion(direccionNueva);
+  if(!dirNorm) return null;
+  const candidatos = [
+    { cat:"biotrom", id: DATA.biotrom.id, nombre: DATA.biotrom.nombre, ubicacion: DATA.biotrom.ubicacion },
+    ...DATA.maestros.salud.map(m=>({cat:"salud", id:m.id, nombre:m.nombre, ubicacion:m.ubicacion})),
+    ...DATA.maestros.encomiendas.map(m=>({cat:"encomiendas", id:m.id, nombre:m.nombre, ubicacion:m.ubicacion})),
+    ...DATA.maestros.otros.map(m=>({cat:"otros", id:m.id, nombre:m.nombre, ubicacion:m.ubicacion}))
+  ];
+  return candidatos.find(c => !(c.cat===excluirCat && c.id===excluirId) && normalizarDireccion(c.ubicacion) === dirNorm) || null;
+}
 function aplicarFiltroMaestros(){
   const input = document.getElementById("maestrosSearch");
   const q = input ? input.value.trim().toUpperCase() : "";
@@ -1005,6 +1030,11 @@ document.querySelectorAll(".btn-add-row[data-cat]").forEach(btn=>{
   });
 });
 
+document.getElementById("maestros").addEventListener("focusin", e=>{
+  if(e.target.getAttribute && e.target.getAttribute("data-field") === "ubicacion"){
+    e.target.dataset.prevValue = e.target.value;
+  }
+});
 document.getElementById("maestros").addEventListener("input", e=>{
   const tr = e.target.closest("tr[data-id]");
   if(!tr) return;
@@ -1016,12 +1046,25 @@ document.getElementById("maestros").addEventListener("input", e=>{
   if(item){ item[field] = e.target.value; }
 });
 document.getElementById("maestros").addEventListener("change", e=>{
-  persistir(); renderDias();
   const field = e.target.getAttribute && e.target.getAttribute("data-field");
   if(field === "ubicacion"){
     const tr = e.target.closest("tr[data-id]");
-    if(tr) verificarUbicacionMaestro(tr.getAttribute("data-cat"), tr.getAttribute("data-id"));
+    const cat = tr.getAttribute("data-cat");
+    const id = tr.getAttribute("data-id");
+    const item = cat === "biotrom" ? DATA.biotrom : DATA.maestros[cat].find(m=>m.id===id);
+    const dup = buscarDireccionDuplicada(e.target.value, cat, id);
+    if(item && dup){
+      alert(`Esta dirección ya está registrada en "${dup.nombre || "(sin nombre)"}". No se puede repetir la misma dirección en dos maestros.`);
+      const prev = e.target.dataset.prevValue || "";
+      item.ubicacion = prev;
+      renderMaestros();
+      return;
+    }
+    persistir(); renderDias();
+    if(tr) verificarUbicacionMaestro(cat, id);
+    return;
   }
+  persistir(); renderDias();
 });
 document.getElementById("maestros").addEventListener("click", e=>{
   if(e.target.getAttribute("data-action") === "del-maestro"){
@@ -1200,7 +1243,7 @@ function renderDiaGroup(dia){
       <div class="dia-field">
         <span class="lbl">Día</span>
         <div class="date-mask-wrap">
-          <input type="text" class="date-mask" maxlength="8" placeholder="dd/mm/aa" value="${escAttr(dia.fecha)}" data-field="fecha">
+          <input type="text" class="date-mask" maxlength="8" placeholder="dd/mm/aa" value="${escAttr(dia.fecha)}" data-field="fecha" inputmode="numeric">
           <button class="cal-btn no-print" title="Elegir fecha">▦
             <input type="date" data-field="fecha-native">
           </button>
@@ -1209,7 +1252,7 @@ function renderDiaGroup(dia){
       <div class="dia-field">
         <span class="lbl">Horas Extra</span>
         <div style="display:flex; align-items:center; gap:6px;">
-          <input type="text" class="he-input" data-field="horasExtraManual" value="${dia.usarManual ? escAttr(dia.horasExtraManual==null?"":dia.horasExtraManual) : heMostrado.toFixed(2)}" ${dia.usarManual?"":"disabled"} placeholder="0">
+          <input type="text" class="he-input" data-field="horasExtraManual" value="${dia.usarManual ? escAttr(dia.horasExtraManual==null?"":dia.horasExtraManual) : heMostrado.toFixed(2)}" ${dia.usarManual?"":"disabled"} placeholder="0" inputmode="decimal">
           <label class="chk-wrap no-print"><input type="checkbox" data-field="usarManual" ${dia.usarManual?"checked":""}> Manual</label>
         </div>
         <span class="he-auto">${dia.usarManual ? "(editado a mano)" : "(automático)"}</span>
@@ -1279,7 +1322,7 @@ function renderMovRow(dia, mv, idx){
     <td>${renderPuntoPicker(mv, "llegada")}</td>
     <td>
       <div style="display:flex; align-items:center; gap:3px;">
-        <input type="text" data-field="km" value="${mv.km!=null?mv.km:""}" placeholder="0.0" style="text-align:right; min-width:46px; flex:1 1 46px;">
+        <input type="text" data-field="km" value="${mv.km!=null?mv.km:""}" placeholder="0.0" style="text-align:right; min-width:46px; flex:1 1 46px;" inputmode="decimal">
         <button class="btn-light no-print" data-action="recalc-km" title="Recalcular distancia entre puntos" style="height:24px; padding:0 5px; font-size:11px; flex-shrink:0;">↻</button>
         <span class="km-status no-print" style="color:var(--warn-text); font-size:12px; cursor:default; flex-shrink:0;"></span>
       </div>
@@ -1305,7 +1348,7 @@ function renderGastoChip(mvId, g){
       ${GASTO_TIPOS.map(t=>`<option value="${t}" ${g.tipo===t?"selected":""}>${t}</option>`).join("")}
     </select>
     ${detalleField}
-    <span class="gasto-amt">$<input type="text" data-field="monto" value="${g.monto!=null && g.monto!==""?formatMonto(g.monto):""}" placeholder="0,00"></span>
+    <span class="gasto-amt">$<input type="text" data-field="monto" value="${g.monto!=null && g.monto!==""?formatMonto(g.monto):""}" placeholder="0,00" inputmode="decimal"></span>
     ${thumb}
     <label class="filebtn no-print" title="Sacar / adjuntar foto">${ICON_CAMERA}<input type="file" accept="image/*" data-field="foto"></label>
     <button class="btn-del-row no-print" data-action="del-gasto" style="width:18px; height:18px; font-size:11px;">×</button>
@@ -1362,6 +1405,13 @@ diasContainer.addEventListener("click", e=>{
     return;
   }
   if(action === "pick-biotrom" && mv && cual){
+    const otro = cual === "partida" ? "llegada" : "partida";
+    if(esMismoPunto(DATA.biotrom.id, "", mv[otro+"Id"], mv[otro+"Libre"])){
+      alert("El punto de partida y el de llegada no pueden ser el mismo.");
+      pickerUI.openKey = null;
+      renderDias();
+      return;
+    }
     mv[cual+"Id"] = DATA.biotrom.id;
     mv[cual+"Libre"] = "";
     pickerUI.openKey = null;
@@ -1375,7 +1425,15 @@ diasContainer.addEventListener("click", e=>{
     return;
   }
   if(action === "pick-item" && mv && cual){
-    mv[cual+"Id"] = e.target.getAttribute("data-id");
+    const idElegido = e.target.getAttribute("data-id");
+    const otro = cual === "partida" ? "llegada" : "partida";
+    if(esMismoPunto(idElegido, "", mv[otro+"Id"], mv[otro+"Libre"])){
+      alert("El punto de partida y el de llegada no pueden ser el mismo.");
+      pickerUI.openKey = null;
+      renderDias();
+      return;
+    }
+    mv[cual+"Id"] = idElegido;
     mv[cual+"Libre"] = "";
     pickerUI.openKey = null;
     if(tienePunto(mv)) autoCalcularKm(mv); else { renderDias(); persistir(); }
@@ -1395,6 +1453,11 @@ diasContainer.addEventListener("click", e=>{
   if(action === "confirmar-libre" && mv && cual){
     const input = pickerEl.querySelector(".picker-libre-input");
     const texto = input ? input.value.trim() : "";
+    const otro = cual === "partida" ? "llegada" : "partida";
+    if(esMismoPunto("", texto, mv[otro+"Id"], mv[otro+"Libre"])){
+      alert("El punto de partida y el de llegada no pueden ser el mismo.");
+      return;
+    }
     mv[cual+"Libre"] = texto;
     mv[cual+"Id"] = "";
     pickerUI.openKey = null;
@@ -1539,6 +1602,13 @@ diasContainer.addEventListener("change", e=>{
     reader.readAsDataURL(e.target.files[0]);
     return;
   }
+  if(mv && (field === "horaIni" || field === "horaFin")){
+    const ini = timeToMin(mv.horaIni), fin = timeToMin(mv.horaFin);
+    if(ini != null && fin != null && fin < ini){
+      alert("La hora de fin no puede ser anterior a la hora de inicio.");
+      if(field === "horaFin") mv.horaFin = ""; else mv.horaIni = "";
+    }
+  }
   if(field === "monto") return; /* manejado por focusout */
   renderDias();
   persistir();
@@ -1611,8 +1681,46 @@ document.getElementById("btnImprimir").addEventListener("click", ()=> window.pri
 const GOOGLE_CLIENT_ID = "951183674911-s3vqfcsi8ggj6n65usisebiujfquqfbe.apps.googleusercontent.com";
 const GOOGLE_SPREADSHEET_ID = "1_lltsOvmi02P_49aLMBelJUBZgvbt-3q-iezcp97uP0";
 const GOOGLE_SHEET_NAME = "Migracion";
+const MIGRACION_HEADER = ["Día","Hora Inicio","Hora Fin","Punto de Partida","Punto de Llegada","Km","Gasto Extra","Monto Gasto Extra","Observaciones"];
 
-function subirAGoogleSheets(filas){
+/* Formatea el día para el Excel/Sheets: "Viernes 31 de julio de 26" */
+const DIAS_SEMANA_MIGRACION = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+const MESES_MIGRACION = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+function parseFechaDDMMAAMigracion(fecha){
+  const m = (fecha||"").match(/^(\d{2})\/(\d{2})\/(\d{2})$/);
+  if(!m) return null;
+  return new Date(2000+parseInt(m[3],10), parseInt(m[2],10)-1, parseInt(m[1],10));
+}
+function formatDiaExcel(fecha){
+  const dt = parseFechaDDMMAAMigracion(fecha);
+  if(!dt) return fecha || "";
+  return `${DIAS_SEMANA_MIGRACION[dt.getDay()]} ${dt.getDate()} de ${MESES_MIGRACION[dt.getMonth()]} de ${String(dt.getFullYear()).slice(-2)}`;
+}
+
+/* Construye las filas (array de arrays) de un día para Excel/Sheets,
+   con Gasto Extra y su Monto en columnas separadas. */
+function construirFilasDia(dia, filas){
+  const diaTxt = formatDiaExcel(dia.fecha);
+  if(dia.movimientos.length === 0){
+    filas.push([diaTxt,"","","","","","","", dia.obs||""]);
+    return;
+  }
+  ordenarPorHoraInicio(dia.movimientos).forEach(mv=>{
+    const gastosTipos = (mv.gastos||[]).map(g=>
+      g.tipo === "Otro" && g.detalle ? `Otro (${g.detalle})` : g.tipo
+    ).join(" | ");
+    const gastosMontos = (mv.gastos||[]).map(g=> formatMonto(g.monto)).join(" | ");
+    filas.push([
+      diaTxt, mv.horaIni||"", mv.horaFin||"",
+      nombrePunto(mv,"partida"), nombrePunto(mv,"llegada"),
+      mv.km!=null?mv.km:"", gastosTipos, gastosMontos, dia.obs||""
+    ]);
+  });
+}
+
+/* Sube a Google Sheets: agrega el encabezado solo si la hoja está vacía,
+   y omite (sin sobreescribir) los días cuya fecha ya figura en la columna A. */
+function subirAGoogleSheets(diasFiltrados){
   return new Promise((resolve, reject)=>{
     if(!GOOGLE_CLIENT_ID || !GOOGLE_SPREADSHEET_ID){
       reject(new Error("Integración con Google Drive no configurada todavía."));
@@ -1628,18 +1736,42 @@ function subirAGoogleSheets(filas){
       callback: async (resp)=>{
         if(resp.error){ reject(new Error(resp.error)); return; }
         try{
-          const range = encodeURIComponent(`A1`);
-          const url = `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SPREADSHEET_ID}/values/${range}:append?valueInputOption=USER_ENTERED`;
-          const r = await fetch(url, {
+          const token = resp.access_token;
+          const colRange = encodeURIComponent(`${GOOGLE_SHEET_NAME}!A:A`);
+          const getUrl = `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SPREADSHEET_ID}/values/${colRange}`;
+          const rGet = await fetch(getUrl, { headers: { "Authorization": "Bearer " + token } });
+          if(!rGet.ok) throw new Error("No se pudo leer la planilla (HTTP " + rGet.status + ")");
+          const dataGet = await rGet.json();
+          const filasExistentes = dataGet.values || [];
+          const hayHeader = filasExistentes.length > 0;
+          const diasYaCargados = new Set(
+            filasExistentes.slice(hayHeader ? 1 : 0).map(f => (f[0]||"").trim()).filter(Boolean)
+          );
+
+          const diasNuevos = [], diasOmitidos = [];
+          diasFiltrados.forEach(dia=>{
+            if(diasYaCargados.has(formatDiaExcel(dia.fecha))) diasOmitidos.push(dia.fecha);
+            else diasNuevos.push(dia);
+          });
+
+          if(diasNuevos.length === 0){
+            resolve({ subidas: 0, omitidos: diasOmitidos });
+            return;
+          }
+
+          const filas = [];
+          if(!hayHeader) filas.push([...MIGRACION_HEADER]);
+          diasNuevos.forEach(dia=> construirFilasDia(dia, filas));
+
+          const range = encodeURIComponent(`${GOOGLE_SHEET_NAME}!A1`);
+          const postUrl = `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SPREADSHEET_ID}/values/${range}:append?valueInputOption=USER_ENTERED`;
+          const rPost = await fetch(postUrl, {
             method: "POST",
-            headers: {
-              "Authorization": "Bearer " + resp.access_token,
-              "Content-Type": "application/json"
-            },
+            headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
             body: JSON.stringify({ values: filas })
           });
-          if(!r.ok) throw new Error("HTTP " + r.status);
-          resolve(true);
+          if(!rPost.ok) throw new Error("HTTP " + rPost.status);
+          resolve({ subidas: diasNuevos.length, omitidos: diasOmitidos });
         }catch(err){ reject(err); }
       }
     });
@@ -1706,39 +1838,29 @@ document.getElementById("btnGenerarMigracion").addEventListener("click", ()=>{
     return;
   }
 
-  const filas = [["Día","Hora Inicio","Hora Fin","Punto de Partida","Punto de Llegada","Km","Gastos Extra","Observaciones"]];
-  diasFiltrados.forEach(dia=>{
-    if(dia.movimientos.length === 0){
-      filas.push([dia.fecha,"","","","","","", dia.obs||""]);
-      return;
-    }
-    const movsOrden = ordenarPorHoraInicio(dia.movimientos);
-    movsOrden.forEach(mv=>{
-      const gastosTxt = (mv.gastos||[]).map(g=>{
-        const tipo = g.tipo === "Otro" && g.detalle ? `Otro (${g.detalle})` : g.tipo;
-        return `${tipo}: ${formatARS(g.monto)}`;
-      }).join(" | ");
-      filas.push([
-        dia.fecha, mv.horaIni||"", mv.horaFin||"",
-        nombrePunto(mv,"partida"), nombrePunto(mv,"llegada"),
-        mv.km!=null?mv.km:"", gastosTxt, dia.obs||""
-      ]);
-    });
-  });
-
   if(GOOGLE_CLIENT_ID && GOOGLE_SPREADSHEET_ID){
     msg.textContent = "Subiendo a Google Sheets...";
     msg.style.color = "var(--text-2)";
-    subirAGoogleSheets(filas).then(()=>{
-      msg.textContent = `Listo: se subieron ${filas.length-1} filas a la planilla de Drive.`;
-      msg.style.color = "var(--ok-text)";
+    subirAGoogleSheets(diasFiltrados).then(res=>{
+      if(res.subidas === 0){
+        msg.textContent = `No se subió nada: ${res.omitidos.length===1?"el día":"los días"} ${res.omitidos.join(", ")} ya estaba${res.omitidos.length===1?"":"n"} cargado${res.omitidos.length===1?"":"s"}.`;
+        msg.style.color = "var(--warn-text)";
+      } else if(res.omitidos.length > 0){
+        msg.textContent = `Se subieron ${res.subidas} día(s) nuevos. Se omitieron (ya estaban cargados): ${res.omitidos.join(", ")}.`;
+        msg.style.color = "var(--ok-text)";
+      } else {
+        msg.textContent = `Listo: se subieron ${res.subidas} día(s) a la planilla de Drive.`;
+        msg.style.color = "var(--ok-text)";
+      }
     }).catch(err=>{
       msg.textContent = `Falló la subida a Drive: ${err.message}`;
       msg.style.color = "var(--err-text)";
     });
   } else {
+    const filas = [[...MIGRACION_HEADER]];
+    diasFiltrados.forEach(dia=> construirFilasDia(dia, filas));
     const ws = XLSX.utils.aoa_to_sheet(filas);
-    ws["!cols"] = [{wch:10},{wch:10},{wch:10},{wch:26},{wch:26},{wch:8},{wch:40},{wch:30}];
+    ws["!cols"] = [{wch:24},{wch:10},{wch:10},{wch:26},{wch:26},{wch:8},{wch:22},{wch:14},{wch:30}];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Migracion");
     const nombreArchivo = `Migracion_Movimientos_${desdeStr.replace(/\//g,"-")}_a_${hastaStr.replace(/\//g,"-")}.xlsx`;
@@ -1858,7 +1980,7 @@ function renderPagos(){
     const debeTxt = esUltimoDia ? formatARS(s.debeAcumulado) : "-";
     const saldoTxt = esUltimoDia ? formatARS(s.saldo) : "-";
     const pagoCell = esUltimoDia
-      ? `<span class="gasto-amt">$<input type="text" style="width:90px;" data-semana="${f.weekKey}" data-field="pago" value="${s.pago?formatMonto(s.pago):""}" placeholder="0,00"></span>`
+      ? `<span class="gasto-amt">$<input type="text" style="width:90px;" data-semana="${f.weekKey}" data-field="pago" value="${s.pago?formatMonto(s.pago):""}" placeholder="0,00" inputmode="decimal"></span>`
       : "-";
     return `
       <tr class="${esUltimoDia?'pagos-week-final':''}" data-dia-id="${f.dia.id}">
@@ -1866,7 +1988,7 @@ function renderPagos(){
         <td>${f.kmTotal.toFixed(1)} km</td>
         <td>
           <div class="pagos-costo-cell">
-            <span class="gasto-amt">$<input type="text" data-field="costoKm" value="${f.costoKm?formatMonto(f.costoKm):""}" placeholder="0,00"></span>
+            <span class="gasto-amt">$<input type="text" data-field="costoKm" value="${f.costoKm?formatMonto(f.costoKm):""}" placeholder="0,00" inputmode="decimal"></span>
             <span class="pagos-costo-total">${formatARS(f.valorKm)}</span>
           </div>
         </td>
@@ -1874,7 +1996,7 @@ function renderPagos(){
         <td>${f.horasExtra.toFixed(2)} hs</td>
         <td>
           <div class="pagos-costo-cell">
-            <span class="gasto-amt">$<input type="text" data-field="costoHsExtra" value="${f.costoHsExtra?formatMonto(f.costoHsExtra):""}" placeholder="0,00"></span>
+            <span class="gasto-amt">$<input type="text" data-field="costoHsExtra" value="${f.costoHsExtra?formatMonto(f.costoHsExtra):""}" placeholder="0,00" inputmode="decimal"></span>
             <span class="pagos-costo-total">${formatARS(f.valorHsExtra)}</span>
           </div>
         </td>
