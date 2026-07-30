@@ -269,12 +269,12 @@ textarea.cta{resize:none; overflow:hidden; min-height:36px; font-family:var(--fo
 .maestros-search:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 2px rgba(14,107,138,.08);}
 .search-wrap{position:relative; max-width:420px; margin-bottom:18px;}
 .search-wrap .search-icon{position:absolute; left:13px; top:50%; transform:translateY(-50%); color:var(--text-3); pointer-events:none;}
-.search-input{
+input.search-input{
   width:100%; border:1px solid var(--border); border-radius:6px; background:var(--bg);
   padding:11px 14px 11px 38px; font-size:13px; font-family:var(--font); color:var(--text);
 }
-.search-input::placeholder{color:var(--text-3);}
-.search-input:focus{outline:none; border-color:var(--accent); background:#fff; box-shadow:0 0 0 3px rgba(14,107,138,.10);}
+input.search-input::placeholder{color:var(--text-3);}
+input.search-input:focus{outline:none; border-color:var(--accent); background:#fff; box-shadow:0 0 0 3px rgba(14,107,138,.10);}
 
 /* ---------- MIGRAR ---------- */
 .migrar-panel{
@@ -414,7 +414,7 @@ textarea.cta{resize:none; overflow:hidden; min-height:36px; font-family:var(--fo
               </button>
             </div>
           </div>
-          <button class="btn btn-primary" id="btnGenerarMigracion">Generar Excel</button>
+          <button class="btn btn-primary" id="btnGenerarMigracion">Subir a Google Sheets</button>
           <button class="btn btn-light" id="btnCancelarMigrar">Cancelar</button>
           <span id="migrarMsg" style="font-size:11px; color:var(--text-2);"></span>
         </div>
@@ -1726,26 +1726,25 @@ document.getElementById("btnGenerarMigracion").addEventListener("click", ()=>{
     });
   });
 
-  const ws = XLSX.utils.aoa_to_sheet(filas);
-  ws["!cols"] = [{wch:10},{wch:10},{wch:10},{wch:26},{wch:26},{wch:8},{wch:40},{wch:30}];
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Migracion");
-  const nombreArchivo = `Migracion_Movimientos_${desdeStr.replace(/\//g,"-")}_a_${hastaStr.replace(/\//g,"-")}.xlsx`;
-  XLSX.writeFile(wb, nombreArchivo);
-
   if(GOOGLE_CLIENT_ID && GOOGLE_SPREADSHEET_ID){
-    msg.textContent = `Se descargó "${nombreArchivo}". Subiendo a Google Sheets...`;
+    msg.textContent = "Subiendo a Google Sheets...";
     msg.style.color = "var(--text-2)";
     subirAGoogleSheets(filas).then(()=>{
-      msg.textContent = `Listo: descargado y subido a la planilla de Drive (${filas.length-1} filas).`;
+      msg.textContent = `Listo: se subieron ${filas.length-1} filas a la planilla de Drive.`;
       msg.style.color = "var(--ok-text)";
     }).catch(err=>{
-      msg.textContent = `Se descargó el Excel, pero falló la subida a Drive: ${err.message}`;
+      msg.textContent = `Falló la subida a Drive: ${err.message}`;
       msg.style.color = "var(--err-text)";
     });
   } else {
-    msg.textContent = `Listo: se descargó "${nombreArchivo}" (${filas.length-1} filas). La subida automática a Drive todavía no está configurada (falta el Client ID de Google y el ID de la planilla).`;
-    msg.style.color = "var(--ok-text)";
+    const ws = XLSX.utils.aoa_to_sheet(filas);
+    ws["!cols"] = [{wch:10},{wch:10},{wch:10},{wch:26},{wch:26},{wch:8},{wch:40},{wch:30}];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Migracion");
+    const nombreArchivo = `Migracion_Movimientos_${desdeStr.replace(/\//g,"-")}_a_${hastaStr.replace(/\//g,"-")}.xlsx`;
+    XLSX.writeFile(wb, nombreArchivo);
+    msg.textContent = `La subida a Drive no está configurada — se descargó "${nombreArchivo}" (${filas.length-1} filas) en su lugar.`;
+    msg.style.color = "var(--warn-text)";
   }
 });
 
