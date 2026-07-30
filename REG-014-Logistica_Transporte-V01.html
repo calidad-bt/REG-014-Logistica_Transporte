@@ -6,6 +6,8 @@
 <title>REG-014 · Registro de Movimientos de Transporte</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 :root{
   --accent:#0E6B8A; --accent-d:#094E66; --accent-l:#E4F2F7;
@@ -232,6 +234,61 @@ textarea.cta{resize:none; overflow:hidden; min-height:36px; font-family:var(--fo
 
 .empty-hint{color:var(--text-3); font-size:12px; padding:14px; text-align:center;}
 
+/* ---------- PUNTO PICKER (Partida / Llegada) ---------- */
+.punto-picker-btn{
+  width:100%; text-align:left; height:34px; padding:5px 9px; border:1px solid var(--border);
+  border-radius:3px; background:#fff; font-family:var(--font); font-size:12px; color:var(--text);
+  cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:6px;
+}
+.punto-picker-btn::after{content:"▾"; color:var(--text-3); font-size:9px; flex-shrink:0;}
+.punto-picker-btn:hover{border-color:var(--accent);}
+.picker-panel{
+  position:fixed; z-index:500; width:270px;
+  background:#fff; border:1px solid var(--border-d); border-radius:var(--radius);
+  padding:6px; box-sizing:border-box;
+}
+.picker-list{max-height:230px; overflow-y:auto; margin-top:2px;}
+.picker-item{
+  padding:9px 10px; font-size:13px; border-radius:3px; cursor:pointer; color:var(--text);
+}
+.picker-item:hover{background:var(--accent-l); color:var(--accent-d);}
+.picker-item-libre{border-top:1px solid var(--border); margin-top:5px; padding-top:11px; color:var(--accent); font-weight:600;}
+.picker-back{padding:6px 7px; font-size:12px; color:var(--accent); cursor:pointer; font-weight:600; display:block;}
+.picker-back:hover{text-decoration:underline;}
+.picker-search, .picker-libre-input{
+  width:100%; border:1px solid var(--border); border-radius:3px; padding:5px 7px; font-size:12px;
+  margin-bottom:4px; font-family:var(--font);
+}
+.picker-empty{padding:8px; font-size:11px; color:var(--text-3); text-align:center;}
+
+/* ---------- BUSCADOR MAESTROS ---------- */
+.maestros-search{
+  width:100%; max-width:340px; border:1px solid var(--border); border-radius:var(--radius);
+  padding:8px 10px; font-size:12px; font-family:var(--font); margin-bottom:18px;
+}
+.maestros-search:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 2px rgba(14,107,138,.08);}
+.search-wrap{position:relative; max-width:420px; margin-bottom:18px;}
+.search-wrap .search-icon{position:absolute; left:13px; top:50%; transform:translateY(-50%); color:var(--text-3); pointer-events:none;}
+.search-input{
+  width:100%; border:1px solid var(--border); border-radius:6px; background:var(--bg);
+  padding:11px 14px 11px 38px; font-size:13px; font-family:var(--font); color:var(--text);
+}
+.search-input::placeholder{color:var(--text-3);}
+.search-input:focus{outline:none; border-color:var(--accent); background:#fff; box-shadow:0 0 0 3px rgba(14,107,138,.10);}
+
+/* ---------- MIGRAR ---------- */
+.migrar-panel{
+  border:1px solid var(--border); border-radius:var(--radius); background:var(--bg);
+  padding:12px 14px; margin-bottom:16px; display:flex; flex-wrap:wrap; align-items:flex-end; gap:14px;
+}
+
+/* ---------- PAGOS ---------- */
+.pagos-lock{max-width:320px; margin:60px auto;}
+.pagos-costo-cell{display:flex; flex-direction:column; gap:2px;}
+.gasto-amt input[type=text]{width:74px; text-align:right; font-family:var(--mono);}
+.pagos-costo-total{font-family:var(--mono); font-weight:700; font-size:12px; color:var(--accent-d);}
+.pagos-week-final{background:var(--accent-l);}
+
 /* ---------- RESPONSIVE / MOBILE ---------- */
 @media (max-width: 720px){
   .layout{padding:calc(var(--nav-h) + 14px) 10px 30px;}
@@ -248,7 +305,7 @@ textarea.cta{resize:none; overflow:hidden; min-height:36px; font-family:var(--fo
   .kpi-row{gap:8px;}
   .kpi-card{min-width:calc(50% - 4px); padding:10px;}
   .kpi-value{font-size:19px;}
-  table{min-width:760px;}
+  table{min-width:790px;}
   .dia-header{gap:10px; padding:8px;}
   .card-body{padding:12px 10px 14px;}
 }
@@ -271,6 +328,7 @@ textarea.cta{resize:none; overflow:hidden; min-height:36px; font-family:var(--fo
   <div class="nav-links">
     <a data-target="movimientos" class="active">Movimientos</a>
     <a data-target="maestros">Maestros</a>
+    <a data-target="pagos">Pagos</a>
   </div>
   <div class="nav-end no-print">
     <span id="liveDot"></span>
@@ -333,8 +391,34 @@ textarea.cta{resize:none; overflow:hidden; min-height:36px; font-family:var(--fo
         </div>
 
         <div class="section-title">Movimientos Diarios</div>
+        <div class="no-print" style="display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
+          <button class="btn-add-row" id="btnNuevoDia" style="flex:1; min-width:200px;">+ Nuevo Día</button>
+          <button class="btn btn-light" id="btnMigrar">Migrar a Excel</button>
+        </div>
+        <div class="migrar-panel no-print" id="migrarPanel" style="display:none;">
+          <div class="dia-field">
+            <span class="lbl">Desde</span>
+            <div class="date-mask-wrap">
+              <input type="text" class="date-mask" id="migrarDesde" maxlength="8" placeholder="dd/mm/aa">
+              <button class="cal-btn" type="button" title="Elegir fecha">▦
+                <input type="date" id="migrarDesdeNative">
+              </button>
+            </div>
+          </div>
+          <div class="dia-field">
+            <span class="lbl">Hasta</span>
+            <div class="date-mask-wrap">
+              <input type="text" class="date-mask" id="migrarHasta" maxlength="8" placeholder="dd/mm/aa">
+              <button class="cal-btn" type="button" title="Elegir fecha">▦
+                <input type="date" id="migrarHastaNative">
+              </button>
+            </div>
+          </div>
+          <button class="btn btn-primary" id="btnGenerarMigracion">Generar Excel</button>
+          <button class="btn btn-light" id="btnCancelarMigrar">Cancelar</button>
+          <span id="migrarMsg" style="font-size:11px; color:var(--text-2);"></span>
+        </div>
         <div id="diasContainer"></div>
-        <button class="btn-add-row no-print" id="btnNuevoDia" style="margin-top:12px;">+ Nuevo Día</button>
       </div>
     </div>
   </div>
@@ -350,6 +434,11 @@ textarea.cta{resize:none; overflow:hidden; min-height:36px; font-family:var(--fo
             <thead><tr><th>Nombre</th><th>Ubicación (dirección)</th></tr></thead>
             <tbody id="tbodyBiotrom"></tbody>
           </table>
+        </div>
+
+        <div class="search-wrap no-print">
+          <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <input type="text" class="search-input" id="maestrosSearch" placeholder="Buscar por nombre o ubicación...">
         </div>
 
         <div class="section-title">Maestro — Centros de Salud</div>
@@ -370,14 +459,57 @@ textarea.cta{resize:none; overflow:hidden; min-height:36px; font-family:var(--fo
         </div>
         <button class="btn-add-row no-print" data-cat="encomiendas" style="margin-bottom:26px;">+ Agregar Encomienda</button>
 
-        <div class="section-title">Maestro — Otros (Esterilización, etc.)</div>
+        <div class="section-title">Maestro — Servicios Varios (Esterilización, etc.)</div>
         <div class="table-scroll" style="margin-bottom:16px;">
           <table>
             <thead><tr><th style="width:26px;"></th><th>Nombre</th><th>Ubicación (dirección)</th><th style="width:36px;" class="no-print"></th></tr></thead>
             <tbody id="tbodyOtros"></tbody>
           </table>
         </div>
-        <button class="btn-add-row no-print" data-cat="otros">+ Agregar Otro</button>
+        <button class="btn-add-row no-print" data-cat="otros">+ Agregar a Servicios Varios</button>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= HOJA 3: PAGOS (protegida por contraseña) ================= -->
+  <div class="doc-block section-page" id="pagos">
+    <div class="card">
+      <div class="card-body">
+
+        <div id="pagosLock" class="pagos-lock">
+          <div class="section-title" style="justify-content:center;">Acceso Restringido</div>
+          <p style="text-align:center; font-size:12px; color:var(--text-2); margin-bottom:14px;">Esta hoja requiere contraseña.</p>
+          <input type="password" id="pagosPasswordInput" class="maestros-search" style="text-align:center; max-width:100%;" placeholder="Contraseña">
+          <button class="btn btn-primary" id="btnPagosUnlock" style="width:100%; justify-content:center;">Ingresar</button>
+          <div id="pagosError" style="color:var(--err-text); font-size:11px; margin-top:8px; display:none; text-align:center;">Contraseña incorrecta.</div>
+        </div>
+
+        <div id="pagosContent" style="display:none;">
+          <div class="section-title">Pagos Semanales</div>
+          <p style="font-size:11px; color:var(--text-2); margin-bottom:14px;">
+            Km, gastos y horas extra se traen automáticamente de Movimientos. "Costo x Km" y "Costo x Hs Extra" son
+            editables por día. "Debe", "Pago" y "Saldo" se calculan una vez por semana, en el último día de esa semana.
+          </p>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Día</th>
+                  <th style="width:80px;">Km</th>
+                  <th style="width:130px;">Costo x Km</th>
+                  <th style="width:100px;">Gastos Extra</th>
+                  <th style="width:80px;">Horas Extra</th>
+                  <th style="width:130px;">Costo x Hs Extra</th>
+                  <th style="width:110px;">Debe (semana)</th>
+                  <th style="width:110px;">Pago (semana)</th>
+                  <th style="width:110px;">Saldo</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyPagos"></tbody>
+            </table>
+          </div>
+        </div>
 
       </div>
     </div>
@@ -455,12 +587,13 @@ function normalizeData(d){
   d.biotrom.nombre = d.biotrom.nombre || BIOTROM_DEFAULT.nombre;
   d.biotrom.ubicacion = d.biotrom.ubicacion != null ? d.biotrom.ubicacion : BIOTROM_DEFAULT.ubicacion;
   d.dias = Array.isArray(d.dias) ? d.dias : [];
-  d.dias.forEach(dia=>{
+  d.dias.forEach((dia,idx)=>{
     dia.id = dia.id || uid();
     dia.fecha = dia.fecha || "";
     dia.usarManual = !!dia.usarManual;
     dia.horasExtraManual = dia.horasExtraManual != null ? dia.horasExtraManual : "";
     dia.obs = dia.obs || "";
+    dia.creadoTs = dia.creadoTs != null ? dia.creadoTs : idx; // orden estable para datos viejos sin creadoTs
     dia.movimientos = Array.isArray(dia.movimientos) ? dia.movimientos : [];
     dia.movimientos.forEach(mv=>{
       mv.id = mv.id || uid();
@@ -468,12 +601,17 @@ function normalizeData(d){
       mv.horaFin = mv.horaFin || "";
       mv.partidaId = mv.partidaId || "";
       mv.llegadaId = mv.llegadaId || "";
+      mv.partidaLibre = mv.partidaLibre || "";
+      mv.llegadaLibre = mv.llegadaLibre || "";
       mv.km = mv.km != null ? mv.km : "";
       mv.gastos = Array.isArray(mv.gastos) ? mv.gastos : [];
     });
   });
   d.metaAprobacion = d.metaAprobacion || "";
   d.metaVigor = d.metaVigor || "";
+  d.pagos = (d.pagos && typeof d.pagos === "object") ? d.pagos : {};
+  d.pagos.dias = (d.pagos.dias && typeof d.pagos.dias === "object") ? d.pagos.dias : {};
+  d.pagos.semanas = (d.pagos.semanas && typeof d.pagos.semanas === "object") ? d.pagos.semanas : {};
   return d;
 }
 
@@ -487,7 +625,8 @@ function defaultData(){
     dias: [],
     biotrom: { ...BIOTROM_DEFAULT },
     metaAprobacion: "",
-    metaVigor: ""
+    metaVigor: "",
+    pagos: { dias: {}, semanas: {} }
   };
 }
 
@@ -630,6 +769,29 @@ function findMaestro(id){
   return all.find(m => m.id === id) || null;
 }
 
+/* Resuelve el punto de partida/llegada de un movimiento: puede ser un maestro
+   (incluido Biotrom) o un texto libre escrito a mano. Para el texto libre, las
+   coordenadas geocodificadas se cachean dentro del propio movimiento (mv). */
+function objetoPunto(mv, cual){
+  const idField = cual + "Id", libreField = cual + "Libre";
+  if(mv[idField]) return findMaestro(mv[idField]);
+  if(mv[libreField] && mv[libreField].trim()){
+    const cacheField = "_geo_" + cual;
+    if(!mv[cacheField] || mv[cacheField].texto !== mv[libreField]){
+      mv[cacheField] = { texto: mv[libreField], lat: null, lng: null };
+    }
+    return {
+      nombre: mv[libreField],
+      ubicacion: mv[libreField],
+      get _lat(){ return mv[cacheField].lat; },
+      set _lat(v){ mv[cacheField].lat = v; },
+      get _lng(){ return mv[cacheField].lng; },
+      set _lng(v){ mv[cacheField].lng = v; }
+    };
+  }
+  return null;
+}
+
 const GASTO_TIPOS = ["Estacionamiento","Combustible / Nafta","Peaje","Otro"];
 
 /* ============================================================
@@ -694,8 +856,8 @@ function mensajeErrorCoords(c, nombre){
   return `No se pudo consultar la dirección de "${nombre}" (sin conexión o servicio no disponible)${det}.`;
 }
 async function autoCalcularKm(mv){
-  const p = findMaestro(mv.partidaId);
-  const l = findMaestro(mv.llegadaId);
+  const p = objetoPunto(mv, "partida");
+  const l = objetoPunto(mv, "llegada");
   if(!p || !l) return;
   const kmInputEl = diasContainer.querySelector(`tr[data-mv-id="${mv.id}"] input[data-field="km"]`);
   const statusEl = diasContainer.querySelector(`tr[data-mv-id="${mv.id}"] .km-status`);
@@ -733,7 +895,7 @@ async function verificarUbicacionMaestro(cat, id){
   if(!m) return;
   const statusEl = document.querySelector(`#maestros tr[data-cat="${cat}"][data-id="${id}"] .geo-status`);
   if(!m.ubicacion || !m.ubicacion.trim()){
-    m._lat = null; m._lng = null;
+    m._lat = null; m._lng = null; m._geoOk = null; m._geoMsg = "";
     if(statusEl){ statusEl.textContent = ""; statusEl.title = ""; }
     return;
   }
@@ -741,13 +903,17 @@ async function verificarUbicacionMaestro(cat, id){
   const c = await geocodeDireccion(m.ubicacion);
   if(c && !c.error){
     m._lat = c.lat; m._lng = c.lng;
+    m._geoOk = true;
+    m._geoMsg = "Ubicado en el mapa: " + (c.nombre || (c.lat.toFixed(5)+", "+c.lng.toFixed(5)));
     if(statusEl){
       statusEl.textContent = "✓";
       statusEl.style.color = "var(--ok-text)";
-      statusEl.title = "Ubicado en el mapa: " + (c.nombre || (c.lat.toFixed(5)+", "+c.lng.toFixed(5)));
+      statusEl.title = m._geoMsg;
     }
   } else {
     m._lat = null; m._lng = null;
+    m._geoOk = false;
+    m._geoMsg = mensajeErrorCoords(c, m.nombre || "este lugar");
     if(statusEl){
       statusEl.textContent = "⚠";
       statusEl.style.color = "var(--err-text)";
@@ -766,18 +932,26 @@ function renderMaestros(){
   renderMaestroTabla("salud","tbodySalud");
   renderMaestroTabla("encomiendas","tbodyEncomiendas");
   renderMaestroTabla("otros","tbodyOtros");
-  poblarSelectsPuntos();
+  aplicarFiltroMaestros();
+}
+function geoStatusHtml(m){
+  if(m._geoOk === true || (m._geoOk == null && m._lat != null && m._lng != null)){
+    return { texto: "✓", color: "var(--ok-text)", title: m._geoMsg || "Ubicado en el mapa." };
+  }
+  if(m._geoOk === false) return { texto: "⚠", color: "var(--err-text)", title: m._geoMsg||"" };
+  return { texto: "", color: "var(--text-3)", title: "" };
 }
 function renderBiotromRow(){
   const tbody = document.getElementById("tbodyBiotrom");
   const m = DATA.biotrom;
+  const gs = geoStatusHtml(m);
   tbody.innerHTML = `
     <tr data-cat="biotrom" data-id="${m.id}">
       <td><input type="text" value="${escAttr(m.nombre)}" data-field="nombre" placeholder="Nombre"></td>
       <td>
         <div style="display:flex; align-items:center; gap:4px;">
           <input type="text" value="${escAttr(m.ubicacion)}" data-field="ubicacion" placeholder="Dirección" style="flex:1;">
-          <span class="geo-status no-print" title="" style="font-size:13px; width:16px; text-align:center; flex-shrink:0; cursor:default;"></span>
+          <span class="geo-status no-print" title="${escAttr(gs.title)}" style="font-size:13px; width:16px; text-align:center; flex-shrink:0; cursor:default; color:${gs.color};">${gs.texto}</span>
         </div>
       </td>
     </tr>
@@ -790,20 +964,36 @@ function renderMaestroTabla(cat, tbodyId){
     tbody.innerHTML = '<tr><td colspan="4" class="empty-hint">Sin registros.</td></tr>';
     return;
   }
-  tbody.innerHTML = lista.map((m,i)=>`
+  tbody.innerHTML = lista.map((m,i)=>{
+    const gs = geoStatusHtml(m);
+    return `
     <tr data-cat="${cat}" data-id="${m.id}">
       <td class="rownum">${i+1}</td>
       <td><input type="text" value="${escAttr(m.nombre)}" data-field="nombre" placeholder="Nombre"></td>
       <td>
         <div style="display:flex; align-items:center; gap:4px;">
           <input type="text" value="${escAttr(m.ubicacion)}" data-field="ubicacion" placeholder="Dirección" style="flex:1;">
-          <span class="geo-status no-print" title="" style="font-size:13px; width:16px; text-align:center; flex-shrink:0; cursor:default;"></span>
+          <span class="geo-status no-print" title="${escAttr(gs.title)}" style="font-size:13px; width:16px; text-align:center; flex-shrink:0; cursor:default; color:${gs.color};">${gs.texto}</span>
         </div>
       </td>
       <td class="no-print" style="text-align:center;"><button class="btn-del-row" data-action="del-maestro">×</button></td>
     </tr>
-  `).join("");
+  `;
+  }).join("");
 }
+function aplicarFiltroMaestros(){
+  const input = document.getElementById("maestrosSearch");
+  const q = input ? input.value.trim().toUpperCase() : "";
+  ["salud","encomiendas","otros"].forEach(cat=>{
+    (DATA.maestros[cat]||[]).forEach(m=>{
+      const tr = document.querySelector(`#maestros tr[data-cat="${cat}"][data-id="${m.id}"]`);
+      if(!tr) return;
+      const match = !q || (m.nombre||"").toUpperCase().includes(q) || (m.ubicacion||"").toUpperCase().includes(q);
+      tr.style.display = match ? "" : "none";
+    });
+  });
+}
+document.getElementById("maestrosSearch").addEventListener("input", aplicarFiltroMaestros);
 function escAttr(s){ return (s==null?"":String(s)).replace(/"/g,"&quot;"); }
 
 document.querySelectorAll(".btn-add-row[data-cat]").forEach(btn=>{
@@ -826,7 +1016,7 @@ document.getElementById("maestros").addEventListener("input", e=>{
   if(item){ item[field] = e.target.value; }
 });
 document.getElementById("maestros").addEventListener("change", e=>{
-  persistir(); poblarSelectsPuntos(); renderDias();
+  persistir(); renderDias();
   const field = e.target.getAttribute && e.target.getAttribute("data-field");
   if(field === "ubicacion"){
     const tr = e.target.closest("tr[data-id]");
@@ -846,22 +1036,70 @@ document.getElementById("maestros").addEventListener("click", e=>{
   }
 });
 
-function poblarSelectsPuntos(){
-  document.querySelectorAll("select.pt-select").forEach(sel=>{
-    const current = sel.value;
-    sel.innerHTML = '<option value="">— Seleccionar —</option>' +
-      `<option value="${DATA.biotrom.id}">${escAttr(DATA.biotrom.nombre)}</option>` +
-      optgroupHtml("Centros de Salud", DATA.maestros.salud) +
-      optgroupHtml("Encomiendas", DATA.maestros.encomiendas) +
-      optgroupHtml("Otros", DATA.maestros.otros);
-    if(current) sel.value = current;
-  });
+/* ============================================================
+   PICKER DE PUNTO DE PARTIDA / LLEGADA
+   Nivel 1: Biotrom / Centros de Salud / Encomiendas / Servicios Varios / Otro (escribir)
+   Nivel 2 (categoría): buscador + lista alfabética de ese maestro
+   Nivel 3 (Otro): campo de texto libre
+============================================================ */
+let pickerUI = { openKey: null, vista: "root", busqueda: "" };
+function pickerKey(mvId, cual){ return mvId + "_" + cual; }
+
+function renderPuntoPicker(mv, cual){
+  const key = pickerKey(mv.id, cual);
+  const abierto = pickerUI.openKey === key;
+  const idField = cual + "Id", libreField = cual + "Libre";
+  let label = "Seleccionar...";
+  if(mv[idField]){
+    const m = findMaestro(mv[idField]);
+    label = m ? m.nombre : "Seleccionar...";
+  } else if(mv[libreField] && mv[libreField].trim()){
+    label = mv[libreField];
+  }
+  return `
+    <div class="punto-picker" data-mv-id="${mv.id}" data-cual="${cual}">
+      <button type="button" class="punto-picker-btn no-print" data-action="toggle-picker">${escAttr(label)}</button>
+      ${abierto ? renderPickerPanel(mv, cual) : ""}
+    </div>
+  `;
 }
-function optgroupHtml(label, lista){
-  if(!lista.length) return "";
-  return `<optgroup label="${label}">` +
-    lista.map(m=>`<option value="${m.id}">${escAttr(m.nombre||"(sin nombre)")}</option>`).join("") +
-    "</optgroup>";
+function renderPickerPanel(mv, cual){
+  if(pickerUI.vista === "root"){
+    return `
+      <div class="picker-panel no-print">
+        <div class="picker-item" data-action="pick-biotrom">Biotrom</div>
+        <div class="picker-item" data-action="pick-cat" data-cat="salud">Centros de Salud</div>
+        <div class="picker-item" data-action="pick-cat" data-cat="encomiendas">Encomiendas</div>
+        <div class="picker-item" data-action="pick-cat" data-cat="otros">Servicios Varios</div>
+        <div class="picker-item picker-item-libre" data-action="pick-libre">Otro (escribir)</div>
+      </div>
+    `;
+  }
+  if(pickerUI.vista === "libre"){
+    const actual = mv[cual + "Libre"] || "";
+    return `
+      <div class="picker-panel no-print">
+        <div class="picker-back" data-action="picker-back">← Volver</div>
+        <input type="text" class="picker-libre-input" placeholder="Escribí el lugar..." value="${escAttr(actual)}">
+        <button class="btn btn-primary" style="height:26px;" data-action="confirmar-libre">Confirmar</button>
+      </div>
+    `;
+  }
+  const cat = pickerUI.vista;
+  const q = pickerUI.busqueda.trim().toUpperCase();
+  const lista = [...DATA.maestros[cat]]
+    .filter(m => !q || (m.nombre||"").toUpperCase().includes(q) || (m.ubicacion||"").toUpperCase().includes(q))
+    .sort((a,b) => (a.nombre||"").localeCompare(b.nombre||"", "es"));
+  return `
+    <div class="picker-panel no-print">
+      <div class="picker-back" data-action="picker-back">← Volver</div>
+      <input type="text" class="picker-search" placeholder="Buscar..." value="${escAttr(pickerUI.busqueda)}">
+      <div class="picker-list">
+        ${lista.length===0 ? '<div class="picker-empty">Sin resultados</div>' :
+          lista.map(m=>`<div class="picker-item" data-action="pick-item" data-cat="${cat}" data-id="${m.id}">${escAttr(m.nombre||"(sin nombre)")}</div>`).join("")}
+      </div>
+    </div>
+  `;
 }
 
 /* ============================================================
@@ -909,26 +1147,48 @@ function renderDias(){
     renderKPIs();
     return;
   }
-  const ordenados = [...DATA.dias].sort((a,b)=> parseDiaKey(b.fecha) - parseDiaKey(a.fecha));
+  const ordenados = [...DATA.dias].sort((a,b)=> {
+    const df = parseDiaKey(b.fecha) - parseDiaKey(a.fecha);
+    if(df !== 0) return df;
+    return (b.creadoTs||0) - (a.creadoTs||0);
+  });
   cont.innerHTML = ordenados.map(dia => renderDiaGroup(dia)).join("");
   ordenados.forEach(dia=>{
     const wrap = cont.querySelector(`[data-dia-id="${dia.id}"] .date-mask`);
     if(wrap) maskDate(wrap);
   });
   cont.querySelectorAll("textarea.cta").forEach(autoGrow);
-  poblarSelectsPuntos();
-  cont.querySelectorAll(`[data-dia-id]`).forEach(g=>{
-    const diaId = g.getAttribute("data-dia-id");
-    const dia = DATA.dias.find(d=>d.id===diaId);
-    if(!dia) return;
-    dia.movimientos.forEach(mv=>{
-      const selP = g.querySelector(`select.pt-select[data-mv-id="${mv.id}"][data-field="partidaId"]`);
-      const selL = g.querySelector(`select.pt-select[data-mv-id="${mv.id}"][data-field="llegadaId"]`);
-      if(selP) selP.value = mv.partidaId || "";
-      if(selL) selL.value = mv.llegadaId || "";
-    });
-  });
   renderKPIs();
+  refocusPickerInput();
+}
+function refocusPickerInput(){
+  if(!pickerUI.openKey) return;
+  const idx = pickerUI.openKey.lastIndexOf("_");
+  const mvId = pickerUI.openKey.slice(0, idx), cual = pickerUI.openKey.slice(idx+1);
+  const p = diasContainer.querySelector(`.punto-picker[data-mv-id="${mvId}"][data-cual="${cual}"]`);
+  if(!p) return;
+  posicionarPickerPanel(p);
+  const input = p.querySelector(".picker-search, .picker-libre-input");
+  if(input){
+    input.focus();
+    const v = input.value;
+    input.setSelectionRange(v.length, v.length);
+  }
+}
+function posicionarPickerPanel(cont){
+  const btn = cont.querySelector(".punto-picker-btn");
+  const panel = cont.querySelector(".picker-panel");
+  if(!btn || !panel) return;
+  const rect = btn.getBoundingClientRect();
+  const panelWidth = 270;
+  let left = rect.left;
+  if(left + panelWidth > window.innerWidth - 8) left = Math.max(8, window.innerWidth - panelWidth - 8);
+  let top = rect.bottom + 4;
+  const panelAlto = panel.offsetHeight || 280;
+  if(top + panelAlto > window.innerHeight - 8) top = Math.max(8, rect.top - panelAlto - 4);
+  panel.style.left = left + "px";
+  panel.style.top = top + "px";
+  panel.style.width = panelWidth + "px";
 }
 
 function renderDiaGroup(dia){
@@ -978,7 +1238,7 @@ function renderDiaGroup(dia){
               <th style="width:90px;">Hora Fin</th>
               <th>Punto de Partida</th>
               <th>Punto de Llegada</th>
-              <th style="width:80px;" title="Se calcula solo si Partida y Llegada tienen dirección cargada en Maestros">Km</th>
+              <th style="width:110px;" title="Se calcula solo si Partida y Llegada tienen dirección cargada en Maestros">Km</th>
               <th>Gastos Extra</th>
               <th class="no-print" style="width:36px;"></th>
             </tr>
@@ -1015,13 +1275,13 @@ function renderMovRow(dia, mv, idx){
     <td class="rownum">${idx+1}</td>
     <td><input type="time" data-field="horaIni" value="${mv.horaIni||""}"></td>
     <td><input type="time" data-field="horaFin" value="${mv.horaFin||""}"></td>
-    <td><select class="pt-select" data-field="partidaId" data-mv-id="${mv.id}"></select></td>
-    <td><select class="pt-select" data-field="llegadaId" data-mv-id="${mv.id}"></select></td>
+    <td>${renderPuntoPicker(mv, "partida")}</td>
+    <td>${renderPuntoPicker(mv, "llegada")}</td>
     <td>
       <div style="display:flex; align-items:center; gap:3px;">
-        <input type="text" data-field="km" value="${mv.km!=null?mv.km:""}" placeholder="0.0" style="text-align:right;">
+        <input type="text" data-field="km" value="${mv.km!=null?mv.km:""}" placeholder="0.0" style="text-align:right; min-width:46px; flex:1 1 46px;">
         <button class="btn-light no-print" data-action="recalc-km" title="Recalcular distancia entre puntos" style="height:24px; padding:0 5px; font-size:11px; flex-shrink:0;">↻</button>
-        <span class="km-status no-print" style="color:var(--warn-text); font-size:12px; cursor:default;"></span>
+        <span class="km-status no-print" style="color:var(--warn-text); font-size:12px; cursor:default; flex-shrink:0;"></span>
       </div>
     </td>
     <td>
@@ -1061,7 +1321,7 @@ document.getElementById("btnNuevoDia").addEventListener("click", ()=>{
   const mm = String(hoy.getMonth()+1).padStart(2,"0");
   const aa = String(hoy.getFullYear()).slice(-2);
   DATA.dias.push({
-    id: uid(), fecha: dd+"/"+mm+"/"+aa, usarManual: false, horasExtraManual: "", obs: "", movimientos: []
+    id: uid(), fecha: dd+"/"+mm+"/"+aa, usarManual: false, horasExtraManual: "", obs: "", creadoTs: Date.now(), movimientos: []
   });
   renderDias();
   persistir();
@@ -1070,6 +1330,7 @@ document.getElementById("btnNuevoDia").addEventListener("click", ()=>{
 const diasContainer = document.getElementById("diasContainer");
 
 diasContainer.addEventListener("click", e=>{
+  if(e.target.closest(".punto-picker")) e.stopPropagation();
   const action = e.target.closest("[data-action]") ? e.target.closest("[data-action]").getAttribute("data-action") : null;
   const diaEl = e.target.closest("[data-dia-id]");
   if(!diaEl) return;
@@ -1082,11 +1343,64 @@ diasContainer.addEventListener("click", e=>{
     renderDias(); persistir(); return;
   }
   if(action === "add-mov"){
-    dia.movimientos.push({ id: uid(), horaIni:"", horaFin:"", partidaId:"", llegadaId:"", km:"", gastos:[] });
+    dia.movimientos.push({ id: uid(), horaIni:"", horaFin:"", partidaId:"", llegadaId:"", partidaLibre:"", llegadaLibre:"", km:"", gastos:[] });
     renderDias(); persistir(); return;
   }
   const mvEl = e.target.closest("tr[data-mv-id]");
   const mv = mvEl ? dia.movimientos.find(m=>m.id===mvEl.getAttribute("data-mv-id")) : null;
+
+  const pickerEl = e.target.closest(".punto-picker");
+  const cual = pickerEl ? pickerEl.getAttribute("data-cual") : null;
+  const tienePunto = m => !!(m.partidaId||m.partidaLibre) && !!(m.llegadaId||m.llegadaLibre);
+
+  if(action === "toggle-picker" && mv && cual){
+    const key = pickerKey(mv.id, cual);
+    pickerUI.openKey = (pickerUI.openKey === key) ? null : key;
+    pickerUI.vista = "root";
+    pickerUI.busqueda = "";
+    renderDias();
+    return;
+  }
+  if(action === "pick-biotrom" && mv && cual){
+    mv[cual+"Id"] = DATA.biotrom.id;
+    mv[cual+"Libre"] = "";
+    pickerUI.openKey = null;
+    if(tienePunto(mv)) autoCalcularKm(mv); else { renderDias(); persistir(); }
+    return;
+  }
+  if(action === "pick-cat" && cual){
+    pickerUI.vista = e.target.getAttribute("data-cat");
+    pickerUI.busqueda = "";
+    renderDias();
+    return;
+  }
+  if(action === "pick-item" && mv && cual){
+    mv[cual+"Id"] = e.target.getAttribute("data-id");
+    mv[cual+"Libre"] = "";
+    pickerUI.openKey = null;
+    if(tienePunto(mv)) autoCalcularKm(mv); else { renderDias(); persistir(); }
+    return;
+  }
+  if(action === "pick-libre" && cual){
+    pickerUI.vista = "libre";
+    renderDias();
+    return;
+  }
+  if(action === "picker-back"){
+    pickerUI.vista = "root";
+    pickerUI.busqueda = "";
+    renderDias();
+    return;
+  }
+  if(action === "confirmar-libre" && mv && cual){
+    const input = pickerEl.querySelector(".picker-libre-input");
+    const texto = input ? input.value.trim() : "";
+    mv[cual+"Libre"] = texto;
+    mv[cual+"Id"] = "";
+    pickerUI.openKey = null;
+    if(tienePunto(mv)) autoCalcularKm(mv); else { renderDias(); persistir(); }
+    return;
+  }
 
   if(action === "del-mov" && mv){
     if(!confirm("¿Eliminar este movimiento?")) return;
@@ -1115,6 +1429,11 @@ diasContainer.addEventListener("click", e=>{
 });
 
 diasContainer.addEventListener("input", e=>{
+  if(e.target.classList.contains("picker-search")){
+    pickerUI.busqueda = e.target.value;
+    renderDias();
+    return;
+  }
   const diaEl = e.target.closest("[data-dia-id]");
   if(!diaEl) return;
   const dia = DATA.dias.find(d=>d.id===diaEl.getAttribute("data-dia-id"));
@@ -1130,8 +1449,6 @@ diasContainer.addEventListener("input", e=>{
   if(mv){
     if(field === "horaIni"){ mv.horaIni = e.target.value; }
     else if(field === "horaFin"){ mv.horaFin = e.target.value; }
-    else if(field === "partidaId"){ mv.partidaId = e.target.value; if(mv.partidaId && mv.llegadaId) autoCalcularKm(mv); }
-    else if(field === "llegadaId"){ mv.llegadaId = e.target.value; if(mv.partidaId && mv.llegadaId) autoCalcularKm(mv); }
     else if(field === "km"){ mv.km = e.target.value; }
     const gastoEl = e.target.closest(".gasto-chip");
     const gasto = gastoEl ? (mv.gastos||[]).find(g=>g.id===gastoEl.getAttribute("data-gasto-id")) : null;
@@ -1241,11 +1558,17 @@ document.getElementById("metaVigor").addEventListener("change", e=>{ DATA.metaVi
 document.querySelectorAll(".nav-links a").forEach(a=>{
   a.addEventListener("click", ()=>{
     const targetId = a.getAttribute("data-target");
+    const prevActive = document.querySelector(".section-page.active");
+    const prevId = prevActive ? prevActive.id : null;
     document.querySelectorAll(".nav-links a").forEach(x=>x.classList.remove("active"));
     document.querySelectorAll(".section-page").forEach(x=>x.classList.remove("active"));
     a.classList.add("active");
     document.getElementById(targetId).classList.add("active");
     window.scrollTo({ top:0, behavior:"instant" in window ? "instant" : "auto" });
+    if(prevId === "pagos" && targetId !== "pagos"){
+      resetPagosLock();
+    }
+    if(targetId === "pagos" && pagosUnlocked) renderPagos();
   });
 });
 
@@ -1271,8 +1594,349 @@ document.getElementById("btnActualizar").addEventListener("click", async ()=>{
 document.getElementById("btnImprimir").addEventListener("click", ()=> window.print());
 
 /* ============================================================
+   MIGRAR A EXCEL + GOOGLE SHEETS (Drive)
+   Genera un .xlsx descargable con Día / Hora Inicio / Hora Fin /
+   Punto de Partida / Punto de Llegada / Km / Gastos Extra / Observaciones,
+   para el rango de fechas elegido, ordenado por día (más reciente primero).
+
+   Para que además se cargue solo a una hoja de cálculo de Google Drive hacen
+   falta dos datos que hoy están vacíos (GOOGLE_CLIENT_ID y GOOGLE_SPREADSHEET_ID):
+   1) Un "OAuth Client ID" de Google Cloud (distinto de la API key de Maps),
+      con "Orígenes de JavaScript autorizados" apuntando al dominio donde esté
+      alojado este archivo (no funciona abierto como file:// local).
+   2) El ID de una planilla de Google Sheets ya creada en Drive (el que aparece
+      en la URL: docs.google.com/spreadsheets/d/AQUI_VA_EL_ID/edit).
+   Mientras esos dos valores estén vacíos, el botón solo descarga el .xlsx.
+============================================================ */
+const GOOGLE_CLIENT_ID = "951183674911-s3vqfcsi8ggj6n65usisebiujfquqfbe.apps.googleusercontent.com";
+const GOOGLE_SPREADSHEET_ID = "1_lltsOvmi02P_49aLMBelJUBZgvbt-3q-iezcp97uP0";
+const GOOGLE_SHEET_NAME = "Migracion";
+
+function subirAGoogleSheets(filas){
+  return new Promise((resolve, reject)=>{
+    if(!GOOGLE_CLIENT_ID || !GOOGLE_SPREADSHEET_ID){
+      reject(new Error("Integración con Google Drive no configurada todavía."));
+      return;
+    }
+    if(typeof google === "undefined" || !google.accounts){
+      reject(new Error("No se pudo cargar el servicio de identidad de Google."));
+      return;
+    }
+    const tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: "https://www.googleapis.com/auth/spreadsheets",
+      callback: async (resp)=>{
+        if(resp.error){ reject(new Error(resp.error)); return; }
+        try{
+          const range = encodeURIComponent(`A1`);
+          const url = `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SPREADSHEET_ID}/values/${range}:append?valueInputOption=USER_ENTERED`;
+          const r = await fetch(url, {
+            method: "POST",
+            headers: {
+              "Authorization": "Bearer " + resp.access_token,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ values: filas })
+          });
+          if(!r.ok) throw new Error("HTTP " + r.status);
+          resolve(true);
+        }catch(err){ reject(err); }
+      }
+    });
+    tokenClient.requestAccessToken();
+  });
+}
+
+function nombrePunto(mv, cual){
+  const idField = cual + "Id", libreField = cual + "Libre";
+  if(mv[idField]){
+    const m = findMaestro(mv[idField]);
+    return m ? m.nombre : "";
+  }
+  return mv[libreField] || "";
+}
+maskDate(document.getElementById("migrarDesde"));
+maskDate(document.getElementById("migrarHasta"));
+document.getElementById("migrarDesdeNative").addEventListener("change", e=>{
+  if(!e.target.value) return;
+  const [y,m,d] = e.target.value.split("-");
+  document.getElementById("migrarDesde").value = d+"/"+m+"/"+y.slice(-2);
+});
+document.getElementById("migrarHastaNative").addEventListener("change", e=>{
+  if(!e.target.value) return;
+  const [y,m,d] = e.target.value.split("-");
+  document.getElementById("migrarHasta").value = d+"/"+m+"/"+y.slice(-2);
+});
+
+document.getElementById("btnMigrar").addEventListener("click", ()=>{
+  const panel = document.getElementById("migrarPanel");
+  const abrir = panel.style.display === "none";
+  panel.style.display = abrir ? "flex" : "none";
+  if(abrir){
+    document.getElementById("migrarMsg").textContent = "";
+  }
+});
+document.getElementById("btnCancelarMigrar").addEventListener("click", ()=>{
+  document.getElementById("migrarPanel").style.display = "none";
+});
+document.getElementById("btnGenerarMigracion").addEventListener("click", ()=>{
+  const msg = document.getElementById("migrarMsg");
+  const desdeStr = document.getElementById("migrarDesde").value.trim();
+  const hastaStr = document.getElementById("migrarHasta").value.trim();
+  if(!desdeStr || !hastaStr){
+    msg.textContent = "Completá ambas fechas.";
+    msg.style.color = "var(--err-text)";
+    return;
+  }
+  const desdeKey = parseDiaKey(desdeStr);
+  const hastaKey = parseDiaKey(hastaStr);
+  if(!desdeKey || !hastaKey){
+    msg.textContent = "Formato de fecha inválido (dd/mm/aa).";
+    msg.style.color = "var(--err-text)";
+    return;
+  }
+  const diasFiltrados = DATA.dias.filter(d=>{
+    const k = parseDiaKey(d.fecha);
+    return k && k >= Math.min(desdeKey,hastaKey) && k <= Math.max(desdeKey,hastaKey);
+  }).sort((a,b)=> parseDiaKey(b.fecha) - parseDiaKey(a.fecha));
+
+  if(diasFiltrados.length === 0){
+    msg.textContent = "No hay días en ese rango.";
+    msg.style.color = "var(--warn-text)";
+    return;
+  }
+
+  const filas = [["Día","Hora Inicio","Hora Fin","Punto de Partida","Punto de Llegada","Km","Gastos Extra","Observaciones"]];
+  diasFiltrados.forEach(dia=>{
+    if(dia.movimientos.length === 0){
+      filas.push([dia.fecha,"","","","","","", dia.obs||""]);
+      return;
+    }
+    const movsOrden = ordenarPorHoraInicio(dia.movimientos);
+    movsOrden.forEach(mv=>{
+      const gastosTxt = (mv.gastos||[]).map(g=>{
+        const tipo = g.tipo === "Otro" && g.detalle ? `Otro (${g.detalle})` : g.tipo;
+        return `${tipo}: ${formatARS(g.monto)}`;
+      }).join(" | ");
+      filas.push([
+        dia.fecha, mv.horaIni||"", mv.horaFin||"",
+        nombrePunto(mv,"partida"), nombrePunto(mv,"llegada"),
+        mv.km!=null?mv.km:"", gastosTxt, dia.obs||""
+      ]);
+    });
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(filas);
+  ws["!cols"] = [{wch:10},{wch:10},{wch:10},{wch:26},{wch:26},{wch:8},{wch:40},{wch:30}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Migracion");
+  const nombreArchivo = `Migracion_Movimientos_${desdeStr.replace(/\//g,"-")}_a_${hastaStr.replace(/\//g,"-")}.xlsx`;
+  XLSX.writeFile(wb, nombreArchivo);
+
+  if(GOOGLE_CLIENT_ID && GOOGLE_SPREADSHEET_ID){
+    msg.textContent = `Se descargó "${nombreArchivo}". Subiendo a Google Sheets...`;
+    msg.style.color = "var(--text-2)";
+    subirAGoogleSheets(filas).then(()=>{
+      msg.textContent = `Listo: descargado y subido a la planilla de Drive (${filas.length-1} filas).`;
+      msg.style.color = "var(--ok-text)";
+    }).catch(err=>{
+      msg.textContent = `Se descargó el Excel, pero falló la subida a Drive: ${err.message}`;
+      msg.style.color = "var(--err-text)";
+    });
+  } else {
+    msg.textContent = `Listo: se descargó "${nombreArchivo}" (${filas.length-1} filas). La subida automática a Drive todavía no está configurada (falta el Client ID de Google y el ID de la planilla).`;
+    msg.style.color = "var(--ok-text)";
+  }
+});
+
+/* ============================================================
+   HOJA PAGOS (protegida con contraseña simple del lado cliente)
+   OJO: esto es solo una barrera visual, no seguridad real — cualquiera
+   que vea el código fuente del archivo puede encontrar la contraseña.
+============================================================ */
+const PAGOS_PASSWORD = "2026";
+let pagosUnlocked = false;
+
+document.getElementById("btnPagosUnlock").addEventListener("click", intentarDesbloquearPagos);
+document.getElementById("pagosPasswordInput").addEventListener("keydown", e=>{
+  if(e.key === "Enter") intentarDesbloquearPagos();
+});
+function intentarDesbloquearPagos(){
+  const val = document.getElementById("pagosPasswordInput").value;
+  if(val === PAGOS_PASSWORD){
+    pagosUnlocked = true;
+    document.getElementById("pagosLock").style.display = "none";
+    document.getElementById("pagosContent").style.display = "block";
+    document.getElementById("pagosError").style.display = "none";
+    renderPagos();
+  } else {
+    document.getElementById("pagosError").style.display = "block";
+  }
+}
+function resetPagosLock(){
+  pagosUnlocked = false;
+  document.getElementById("pagosLock").style.display = "block";
+  document.getElementById("pagosContent").style.display = "none";
+  document.getElementById("pagosError").style.display = "none";
+  document.getElementById("pagosPasswordInput").value = "";
+}
+
+const DIAS_SEMANA_PAGOS = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+const MESES_ABR_PAGOS = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+
+function parseFechaDDMMAA(fecha){
+  const m = (fecha||"").match(/^(\d{2})\/(\d{2})\/(\d{2})$/);
+  if(!m) return null;
+  return new Date(2000+parseInt(m[3],10), parseInt(m[2],10)-1, parseInt(m[1],10));
+}
+function formatDiaPago(fecha){
+  const dt = parseFechaDDMMAA(fecha);
+  if(!dt) return fecha;
+  return `${DIAS_SEMANA_PAGOS[dt.getDay()]} ${dt.getDate()} ${MESES_ABR_PAGOS[dt.getMonth()]} ${dt.getFullYear()}`;
+}
+function isoWeekKey(dt){
+  const d = new Date(Date.UTC(dt.getFullYear(), dt.getMonth(), dt.getDate()));
+  const dayNum = (d.getUTCDay() + 6) % 7;
+  d.setUTCDate(d.getUTCDate() - dayNum + 3);
+  const firstThursday = new Date(Date.UTC(d.getUTCFullYear(),0,4));
+  const week = 1 + Math.round(((d - firstThursday) / 86400000 - 3 + ((firstThursday.getUTCDay()+6)%7)) / 7);
+  return d.getUTCFullYear() + "-W" + String(week).padStart(2,"0");
+}
+
+function renderPagos(){
+  const tbody = document.getElementById("tbodyPagos");
+  const diasConFecha = DATA.dias
+    .filter(d => parseFechaDDMMAA(d.fecha))
+    .sort((a,b)=> parseDiaKey(a.fecha) - parseDiaKey(b.fecha)); // ascendente para calcular bien saldo/semana
+
+  if(diasConFecha.length === 0){
+    tbody.innerHTML = '<tr><td colspan="9" class="empty-hint">Sin días con fecha válida en Movimientos.</td></tr>';
+    return;
+  }
+
+  // Paso 1: calcular datos base por día + a qué semana pertenece
+  const filas = diasConFecha.map(dia=>{
+    const tot = computeDiaTotals(dia);
+    const horasExtra = dia.usarManual ? (Number(dia.horasExtraManual)||0) : Math.round(tot.heAuto*100)/100;
+    const cfgDia = DATA.pagos.dias[dia.id] || {};
+    const costoKm = cfgDia.costoKm != null ? Number(cfgDia.costoKm) : 0;
+    const costoHsExtra = cfgDia.costoHsExtra != null ? Number(cfgDia.costoHsExtra) : 0;
+    const valorKm = costoKm * tot.kmTotal;
+    const valorHsExtra = costoHsExtra * horasExtra;
+    return {
+      dia, kmTotal: tot.kmTotal, gastoTotal: tot.gastoTotal, horasExtra,
+      costoKm, costoHsExtra, valorKm, valorHsExtra,
+      weekKey: isoWeekKey(parseFechaDDMMAA(dia.fecha))
+    };
+  });
+
+  // Paso 2: acumular "debe" por semana; el ultimo dia (cronologicamente) de cada
+  // semana es el que muestra Debe/Pago/Saldo.
+  const semanas = {}; // weekKey -> { debeAcumulado, ultimoDiaId }
+  filas.forEach(f=>{
+    if(!semanas[f.weekKey]) semanas[f.weekKey] = { debeAcumulado: 0, ultimoDiaId: null };
+    semanas[f.weekKey].debeAcumulado += f.valorKm + f.gastoTotal + f.valorHsExtra;
+    semanas[f.weekKey].ultimoDiaId = f.dia.id; // como vamos en orden ascendente, el ultimo asignado es el mas reciente
+  });
+
+  // Paso 3: saldo corrido semana a semana (orden cronologico)
+  const ordenSemanas = [];
+  const vistas = new Set();
+  filas.forEach(f=>{ if(!vistas.has(f.weekKey)){ vistas.add(f.weekKey); ordenSemanas.push(f.weekKey); } });
+  let saldoAnterior = 0;
+  ordenSemanas.forEach(wk=>{
+    const s = semanas[wk];
+    s.pago = (DATA.pagos.semanas[wk] && DATA.pagos.semanas[wk].pago != null) ? Number(DATA.pagos.semanas[wk].pago) : 0;
+    s.saldo = saldoAnterior + s.debeAcumulado - s.pago;
+    saldoAnterior = s.saldo;
+  });
+
+  // Paso 4: render, mas reciente primero
+  const filasDesc = [...filas].reverse();
+  tbody.innerHTML = filasDesc.map(f=>{
+    const s = semanas[f.weekKey];
+    const esUltimoDia = s.ultimoDiaId === f.dia.id;
+    const debeTxt = esUltimoDia ? formatARS(s.debeAcumulado) : "-";
+    const saldoTxt = esUltimoDia ? formatARS(s.saldo) : "-";
+    const pagoCell = esUltimoDia
+      ? `<span class="gasto-amt">$<input type="text" style="width:90px;" data-semana="${f.weekKey}" data-field="pago" value="${s.pago?formatMonto(s.pago):""}" placeholder="0,00"></span>`
+      : "-";
+    return `
+      <tr class="${esUltimoDia?'pagos-week-final':''}" data-dia-id="${f.dia.id}">
+        <td>${formatDiaPago(f.dia.fecha)}</td>
+        <td>${f.kmTotal.toFixed(1)} km</td>
+        <td>
+          <div class="pagos-costo-cell">
+            <span class="gasto-amt">$<input type="text" data-field="costoKm" value="${f.costoKm?formatMonto(f.costoKm):""}" placeholder="0,00"></span>
+            <span class="pagos-costo-total">${formatARS(f.valorKm)}</span>
+          </div>
+        </td>
+        <td>${formatARS(f.gastoTotal)}</td>
+        <td>${f.horasExtra.toFixed(2)} hs</td>
+        <td>
+          <div class="pagos-costo-cell">
+            <span class="gasto-amt">$<input type="text" data-field="costoHsExtra" value="${f.costoHsExtra?formatMonto(f.costoHsExtra):""}" placeholder="0,00"></span>
+            <span class="pagos-costo-total">${formatARS(f.valorHsExtra)}</span>
+          </div>
+        </td>
+        <td><strong>${debeTxt}</strong></td>
+        <td>${pagoCell}</td>
+        <td><strong>${saldoTxt}</strong></td>
+      </tr>
+    `;
+  }).join("");
+}
+
+document.getElementById("tbodyPagos").addEventListener("input", e=>{
+  const field = e.target.getAttribute("data-field");
+  if(field === "costoKm" || field === "costoHsExtra" || field === "pago"){
+    const formateado = liveFormatMonto(e.target.value);
+    e.target.value = formateado;
+    const pos = e.target.value.length;
+    e.target.setSelectionRange(pos, pos);
+  }
+});
+document.getElementById("tbodyPagos").addEventListener("focusin", e=>{
+  const field = e.target.getAttribute("data-field");
+  if(field === "costoKm" || field === "costoHsExtra" || field === "pago"){
+    const n = parseMonto(e.target.value);
+    e.target.value = n === 0 ? "" : String(n).replace(".", ",");
+  }
+});
+document.getElementById("tbodyPagos").addEventListener("focusout", e=>{
+  const field = e.target.getAttribute("data-field");
+  if(field === "costoKm" || field === "costoHsExtra"){
+    const tr = e.target.closest("tr[data-dia-id]");
+    const diaId = tr.getAttribute("data-dia-id");
+    if(!DATA.pagos.dias[diaId]) DATA.pagos.dias[diaId] = {};
+    DATA.pagos.dias[diaId][field] = parseMonto(e.target.value);
+    renderPagos();
+    persistir();
+  } else if(field === "pago"){
+    const wk = e.target.getAttribute("data-semana");
+    if(!DATA.pagos.semanas[wk]) DATA.pagos.semanas[wk] = {};
+    DATA.pagos.semanas[wk].pago = parseMonto(e.target.value);
+    renderPagos();
+    persistir();
+  }
+});
+
+/* ============================================================
    INIT
 ============================================================ */
+document.addEventListener("click", e=>{
+  if(pickerUI.openKey && !e.target.closest(".punto-picker")){
+    pickerUI.openKey = null;
+    renderDias();
+  }
+});
+document.addEventListener("scroll", ()=>{
+  if(pickerUI.openKey){
+    pickerUI.openKey = null;
+    renderDias();
+  }
+}, true);
+
 cargarInicial();
 </script>
 </body>
