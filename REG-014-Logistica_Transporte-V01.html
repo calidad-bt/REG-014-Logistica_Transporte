@@ -284,6 +284,29 @@ input.search-input:focus{outline:none; border-color:var(--accent); background:#f
 
 /* ---------- PAGOS ---------- */
 .pagos-lock{max-width:320px; margin:60px auto;}
+
+/* ---------- MODAL CONTRASEÑA (Migrar a Excel) ---------- */
+.modal-overlay{
+  position:fixed; inset:0; background:rgba(28,34,38,.45); z-index:600;
+  display:none; align-items:center; justify-content:center; padding:20px;
+}
+.modal-overlay.open{display:flex;}
+.modal-box{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  width:100%; max-width:320px; padding:16px 18px 18px;
+}
+.modal-box .section-title{margin-bottom:10px;}
+.modal-box input[type=password]{
+  width:100%; border:1px solid var(--border); border-radius:var(--radius);
+  padding:8px 10px; font-size:12px; font-family:var(--font); margin-bottom:10px; text-align:center;
+}
+.modal-box input[type=password]:focus{
+  outline:none; border-color:var(--accent); box-shadow:0 0 0 2px rgba(14,107,138,.08);
+}
+.modal-box .modal-actions{display:flex; gap:8px;}
+.modal-box .modal-actions .btn{flex:1; justify-content:center;}
+.modal-error{color:var(--err-text); font-size:11px; margin-bottom:8px; text-align:center; display:none;}
+.modal-error.show{display:block;}
 .pagos-costo-cell{display:flex; flex-direction:column; gap:2px;}
 .gasto-amt input[type=text]{width:74px; text-align:right; font-family:var(--mono);}
 .pagos-costo-total{font-family:var(--mono); font-weight:700; font-size:12px; color:var(--accent-d);}
@@ -515,6 +538,19 @@ input.search-input:focus{outline:none; border-color:var(--accent); background:#f
     </div>
   </div>
 
+</div>
+
+<div class="modal-overlay no-print" id="migrarModal">
+  <div class="modal-box">
+    <div class="section-title" style="justify-content:center;">Acceso Restringido</div>
+    <p style="text-align:center; font-size:12px; color:var(--text-2); margin-bottom:12px;">Ingresá la contraseña para migrar a Excel / Google Sheets.</p>
+    <input type="password" id="migrarPasswordInput" placeholder="Contraseña">
+    <div class="modal-error" id="migrarModalError">Contraseña incorrecta.</div>
+    <div class="modal-actions">
+      <button class="btn btn-light" id="btnMigrarModalCancelar">Cancelar</button>
+      <button class="btn btn-primary" id="btnMigrarModalIngresar">Ingresar</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1800,13 +1836,48 @@ document.getElementById("migrarHastaNative").addEventListener("change", e=>{
   document.getElementById("migrarHasta").value = d+"/"+m+"/"+y.slice(-2);
 });
 
-document.getElementById("btnMigrar").addEventListener("click", ()=>{
+/* ============================================================
+   CONTRASEÑA PARA MIGRAR A EXCEL / GOOGLE SHEETS
+   Pide la contraseña cada vez que se toca el botón (no se recuerda
+   entre aperturas). Barrera solo visual del lado del cliente, igual
+   que en Pagos.
+============================================================ */
+const MIGRAR_PASSWORD = "2026";
+
+function abrirPanelMigrar(){
   const panel = document.getElementById("migrarPanel");
-  const abrir = panel.style.display === "none";
-  panel.style.display = abrir ? "flex" : "none";
-  if(abrir){
-    document.getElementById("migrarMsg").textContent = "";
+  panel.style.display = "flex";
+  document.getElementById("migrarMsg").textContent = "";
+}
+function abrirModalMigrar(){
+  document.getElementById("migrarPasswordInput").value = "";
+  document.getElementById("migrarModalError").classList.remove("show");
+  document.getElementById("migrarModal").classList.add("open");
+  document.getElementById("migrarPasswordInput").focus();
+}
+function cerrarModalMigrar(){
+  document.getElementById("migrarModal").classList.remove("open");
+}
+function intentarDesbloquearMigrar(){
+  const val = document.getElementById("migrarPasswordInput").value;
+  if(val === MIGRAR_PASSWORD){
+    cerrarModalMigrar();
+    abrirPanelMigrar();
+  } else {
+    document.getElementById("migrarModalError").classList.add("show");
   }
+}
+document.getElementById("btnMigrarModalIngresar").addEventListener("click", intentarDesbloquearMigrar);
+document.getElementById("migrarPasswordInput").addEventListener("keydown", e=>{
+  if(e.key === "Enter") intentarDesbloquearMigrar();
+});
+document.getElementById("btnMigrarModalCancelar").addEventListener("click", cerrarModalMigrar);
+document.getElementById("migrarModal").addEventListener("click", e=>{
+  if(e.target.id === "migrarModal") cerrarModalMigrar();
+});
+
+document.getElementById("btnMigrar").addEventListener("click", ()=>{
+  abrirModalMigrar();
 });
 document.getElementById("btnCancelarMigrar").addEventListener("click", ()=>{
   document.getElementById("migrarPanel").style.display = "none";
