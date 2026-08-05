@@ -53,6 +53,11 @@ nav{
 #syncStatus{font-family:var(--mono); font-size:11px; color:rgba(255,255,255,.55); white-space:nowrap;}
 #syncStatus.sync-ok{color:#4ADE80;}
 #syncStatus.sync-error{color:#F87171;}
+.user-chip{
+  display:flex; align-items:center; gap:8px; margin-left:4px;
+  background:rgba(255,255,255,.12); border-radius:var(--radius); padding:3px 4px 3px 10px;
+}
+.user-chip #navUserLabel{font-family:var(--mono); font-size:11px; color:rgba(255,255,255,.85); white-space:nowrap;}
 .nav-btn{
   height:26px; font-size:11px; border-radius:3px; border:1px solid rgba(255,255,255,.3);
   background:rgba(255,255,255,.08); color:#fff; padding:0 10px; cursor:pointer;
@@ -285,6 +290,52 @@ input.search-input:focus{outline:none; border-color:var(--accent); background:#f
 /* ---------- PAGOS ---------- */
 .pagos-lock{max-width:320px; margin:60px auto;}
 
+/* ---------- SWITCHER DE PERSONA (Leo / Tito) ---------- */
+.persona-switch{display:flex; gap:6px; margin-bottom:16px;}
+.persona-btn{
+  height:28px; padding:0 16px; border-radius:var(--radius); border:1px solid var(--border);
+  background:var(--surface); color:var(--text-2); font-size:12px; font-weight:600;
+  font-family:var(--font); cursor:pointer; transition:filter .1s;
+}
+.persona-btn:hover{filter:brightness(.96);}
+.persona-btn.active{background:var(--accent); border-color:var(--accent); color:#fff;}
+
+/* ---------- PANTALLA DE LOGIN ---------- */
+.login-gate{
+  position:fixed; inset:0; background:var(--bg); z-index:1000;
+  display:flex; align-items:center; justify-content:center; padding:20px;
+}
+.login-box{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  width:100%; max-width:320px; padding:28px 24px 24px; text-align:center;
+}
+.login-logo{
+  width:48px; height:48px; margin:0 auto 14px; border-radius:var(--radius);
+  background:var(--accent); color:#fff; font-family:var(--mono); font-size:18px; font-weight:600;
+  letter-spacing:.08em; display:flex; align-items:center; justify-content:center;
+}
+.login-title{font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--text);}
+.login-subtitle{font-size:11px; color:var(--text-2); margin-top:3px; margin-bottom:20px;}
+.login-label{display:block; font-size:9px; text-transform:uppercase; letter-spacing:.07em; color:var(--text-3); text-align:left; margin-bottom:4px;}
+.login-box select, .login-box input[type=password]{
+  width:100%; border:1px solid var(--border); border-radius:var(--radius);
+  padding:8px 10px; font-size:13px; font-family:var(--font); margin-bottom:14px;
+  background:var(--surface); color:var(--text);
+}
+.login-box select{appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='6'%3E%3Cpath d='M0 0l4.5 6L9 0z' fill='%235A6470'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; padding-right:24px;}
+.login-box select:focus, .login-box input[type=password]:focus{
+  outline:none; border-color:var(--accent); box-shadow:0 0 0 2px rgba(14,107,138,.08);
+}
+.login-error{color:var(--err-text); font-size:11px; margin:-6px 0 12px; display:none;}
+.login-error.show{display:block;}
+
+/* ---------- TABLA USUARIOS ---------- */
+.row-num{font-family:var(--mono); font-size:11px; color:var(--text-3); text-align:center;}
+.permisos-check-group{display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; font-size:12px; color:var(--text-2);}
+.permisos-check-group label{display:inline-flex; align-items:center; gap:5px; cursor:pointer; white-space:nowrap;}
+.permisos-check-group input[type=checkbox]{width:14px; height:14px; accent-color:var(--accent); cursor:pointer;}
+.permisos-sep{color:var(--border-d);}
+
 /* ---------- MODAL CONTRASEÑA (Migrar a Excel) ---------- */
 .modal-overlay{
   position:fixed; inset:0; background:rgba(28,34,38,.45); z-index:600;
@@ -346,18 +397,44 @@ input.search-input:focus{outline:none; border-color:var(--accent); background:#f
 </head>
 <body>
 
+<!-- ================= PANTALLA DE LOGIN ================= -->
+<div class="login-gate" id="loginGate">
+  <div class="login-box">
+    <div class="login-logo">BT</div>
+    <div class="login-title">SGC · REG-014</div>
+    <div class="login-subtitle">Registro de Movimientos de Transporte</div>
+
+    <label class="login-label">Usuario</label>
+    <select id="loginUser"></select>
+
+    <label class="login-label">Contraseña</label>
+    <input type="password" id="loginPassword" placeholder="Contraseña">
+
+    <div class="login-error" id="loginError">Contraseña incorrecta.</div>
+
+    <button class="btn btn-primary" id="btnLoginIngresar" style="width:100%; justify-content:center;" disabled>Cargando datos…</button>
+  </div>
+</div>
+
+<div id="appRoot" style="display:none;">
+
 <nav>
   <div class="nav-brand">SGC · REG-014</div>
   <div class="nav-links">
     <a data-target="movimientos" class="active">Movimientos</a>
     <a data-target="maestros">Maestros</a>
     <a data-target="pagos">Pagos</a>
+    <a data-target="usuarios" id="navUsuarios" style="display:none;">Usuarios</a>
   </div>
   <div class="nav-end no-print">
     <span id="liveDot"></span>
     <span id="syncStatus">Cargando…</span>
     <button class="nav-btn" id="btnActualizar">Actualizar</button>
     <button class="nav-btn" id="btnImprimir">Imprimir</button>
+    <div class="user-chip">
+      <span id="navUserLabel"></span>
+      <button class="nav-btn" id="btnSalir">Salir</button>
+    </div>
   </div>
 </nav>
 
@@ -399,6 +476,11 @@ input.search-input:focus{outline:none; border-color:var(--accent); background:#f
     <div class="card">
       <div class="card-body">
 
+        <div class="persona-switch no-print" id="movPersonaSwitch">
+          <button class="persona-btn" data-persona="leo">Leo</button>
+          <button class="persona-btn" data-persona="tito">Tito</button>
+        </div>
+
         <div class="section-title">Indicadores</div>
         <div class="kpi-row" id="kpiRow">
           <div class="kpi-card">
@@ -417,6 +499,7 @@ input.search-input:focus{outline:none; border-color:var(--accent); background:#f
         <div class="no-print" style="display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
           <button class="btn-add-row" id="btnNuevoDia" style="flex:1; min-width:200px;">+ Nuevo Día</button>
           <button class="btn btn-light" id="btnMigrar">Migrar a Excel</button>
+          <span id="migrarLockMsg" class="no-print" style="display:none; align-self:center; font-size:11px; color:var(--text-3);">🔒 Requiere permiso de Pagos</span>
         </div>
         <div class="migrar-panel no-print" id="migrarPanel" style="display:none;">
           <div class="dia-field">
@@ -500,15 +583,11 @@ input.search-input:focus{outline:none; border-color:var(--accent); background:#f
     <div class="card">
       <div class="card-body">
 
-        <div id="pagosLock" class="pagos-lock">
-          <div class="section-title" style="justify-content:center;">Acceso Restringido</div>
-          <p style="text-align:center; font-size:12px; color:var(--text-2); margin-bottom:14px;">Esta hoja requiere contraseña.</p>
-          <input type="password" id="pagosPasswordInput" class="maestros-search" style="text-align:center; max-width:100%;" placeholder="Contraseña">
-          <button class="btn btn-primary" id="btnPagosUnlock" style="width:100%; justify-content:center;">Ingresar</button>
-          <div id="pagosError" style="color:var(--err-text); font-size:11px; margin-top:8px; display:none; text-align:center;">Contraseña incorrecta.</div>
-        </div>
-
-        <div id="pagosContent" style="display:none;">
+        <div id="pagosContent">
+          <div class="persona-switch no-print" id="pagosPersonaSwitch">
+            <button class="persona-btn" data-persona="leo">Leo</button>
+            <button class="persona-btn" data-persona="tito">Tito</button>
+          </div>
           <div class="section-title">Pagos Semanales</div>
           <p style="font-size:11px; color:var(--text-2); margin-bottom:14px;">
             Km, gastos y horas extra se traen automáticamente de Movimientos. "Costo x Km" y "Costo x Hs Extra" son
@@ -538,26 +617,51 @@ input.search-input:focus{outline:none; border-color:var(--accent); background:#f
     </div>
   </div>
 
-</div>
-
-<div class="modal-overlay no-print" id="migrarModal">
-  <div class="modal-box">
-    <div class="section-title" style="justify-content:center;">Acceso Restringido</div>
-    <p style="text-align:center; font-size:12px; color:var(--text-2); margin-bottom:12px;">Ingresá la contraseña para migrar a Excel / Google Sheets.</p>
-    <input type="password" id="migrarPasswordInput" placeholder="Contraseña">
-    <div class="modal-error" id="migrarModalError">Contraseña incorrecta.</div>
-    <div class="modal-actions">
-      <button class="btn btn-light" id="btnMigrarModalCancelar">Cancelar</button>
-      <button class="btn btn-primary" id="btnMigrarModalIngresar">Ingresar</button>
+  <!-- ================= HOJA 4: USUARIOS (solo administradora) ================= -->
+  <div class="doc-block section-page" id="usuarios">
+    <div class="card">
+      <div class="card-body">
+        <div class="section-title">Usuarios del Sistema</div>
+        <p style="font-size:11px; color:var(--text-2); margin-bottom:14px;">
+          Solo ve esta hoja quien tenga el permiso "administración". Cualquier cambio (usuario, contraseña,
+          permisos o personas) se guarda al instante y aplica en cualquier dispositivo desde el próximo
+          inicio de sesión de ese usuario.
+        </p>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:32px;">#</th>
+                <th style="width:150px;">Usuario</th>
+                <th style="width:150px;">Contraseña</th>
+                <th>Permisos</th>
+                <th style="width:40px;"></th>
+              </tr>
+            </thead>
+            <tbody id="tbodyUsuarios"></tbody>
+          </table>
+        </div>
+        <button class="btn-add-row no-print" id="btnAgregarUsuario" style="margin-top:10px;">+ Agregar usuario</button>
+        <div style="margin-top:14px; padding:10px 12px; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); font-size:11px; color:var(--text-2); line-height:1.6;">
+          <strong>movimientos</strong> — ve la hoja Movimientos &nbsp;·&nbsp;
+          <strong>maestros</strong> — ve la hoja Maestros &nbsp;·&nbsp;
+          <strong>pagos</strong> — ve la hoja Pagos y habilita el botón "Migrar a Excel" en Movimientos &nbsp;·&nbsp;
+          <strong>administración</strong> — ve esta hoja de Usuarios &nbsp;·&nbsp;
+          <strong>Leo / Tito</strong> — qué subhoja(s) de Movimientos y Pagos puede ver y elegir con el switcher.
+        </div>
+      </div>
     </div>
   </div>
+
 </div>
+
+</div><!-- /#appRoot -->
 
 <script>
 /* ============================================================
    CONFIG / FIREBASE / LOCALSTORAGE
 ============================================================ */
-const FB_URL = "https://biotrom-carga-maquina-default-rtdb.firebaseio.com";
+const FB_URL = "https://sgc-bt-default-rtdb.firebaseio.com";
 const FB_PATH = "/reg014";
 const LS_KEY = "REG014_v1";
 let lastTs = 0;
@@ -587,6 +691,35 @@ function setSyncStatus(text, cls){
 }
 
 /* ============================================================
+   USUARIOS Y PERMISOS
+   Las contraseñas viven en DATA.usuarios (persistidas en Firebase),
+   arrancan con estos valores la primera vez; después viven en DATA.usuarios
+   (editable por completo desde la hoja Usuarios: usuario, contraseña,
+   permisos por módulo y qué personas de Movimientos/Pagos puede ver).
+   OJO: como toda validación de este archivo, es una barrera del lado
+   del cliente, visible en el código fuente — no reemplaza seguridad real.
+============================================================ */
+const DEFAULT_USUARIOS = {
+  florencia: { password: "2026", permisos: { movimientos:true, maestros:true, pagos:true, administracion:true  }, personas: { leo:true,  tito:true  } },
+  martin:    { password: "2026", permisos: { movimientos:true, maestros:true, pagos:true, administracion:false }, personas: { leo:true,  tito:true  } },
+  leo:       { password: "2026", permisos: { movimientos:true, maestros:false,pagos:false,administracion:false }, personas: { leo:true,  tito:false } },
+  tito:      { password: "2026", permisos: { movimientos:true, maestros:false,pagos:false,administracion:false }, personas: { leo:false, tito:true  } }
+};
+let currentUser = null; // se completa al hacer login, ej: "florencia"
+
+/* Permisos y personas visibles del usuario logueado (con fallback seguro). */
+function permisosActuales(){
+  const u = DATA.usuarios[currentUser];
+  return (u && u.permisos) ? u.permisos : { movimientos:true, maestros:false, pagos:false, administracion:false };
+}
+function personasPermitidasActuales(){
+  const u = DATA.usuarios[currentUser];
+  const per = (u && u.personas) ? u.personas : { leo:true, tito:false };
+  const permitidas = PERSONAS.filter(p=>per[p]);
+  return permitidas.length ? permitidas : PERSONAS.slice();
+}
+
+/* ============================================================
    PUNTO FIJO BIOTROM (siempre disponible antes de los maestros,
    editable en la hoja Maestros para poder chequear/corregir la dirección)
 ============================================================ */
@@ -599,37 +732,36 @@ const BIOTROM_DEFAULT = {
 
 /* ============================================================
    DATA MODEL
+   Movimientos y Pagos están separados por persona (Leo / Tito).
+   DATA.movs.leo.dias y DATA.movs.tito.dias son independientes entre sí,
+   igual que DATA.pagos.leo y DATA.pagos.tito.
 ============================================================ */
+const PERSONAS = ["leo","tito"];
+const PERSONA_NOMBRE = { leo: "Leo", tito: "Tito" };
+let movPersonaActual = "leo";   // persona activa en la hoja Movimientos
+let pagosPersonaActual = "leo"; // persona activa en la hoja Pagos
+
 let DATA = {
   maestros: { salud: [], encomiendas: [], otros: [] },
-  dias: [],
+  movs: { leo: { dias: [] }, tito: { dias: [] } },
   biotrom: { ...BIOTROM_DEFAULT },
   metaAprobacion: "",
-  metaVigor: ""
+  metaVigor: "",
+  pagos: { leo: { dias:{}, semanas:{} }, tito: { dias:{}, semanas:{} } },
+  usuarios: {}
 };
 
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 
-/* Normaliza la forma de DATA para que nunca falte una propiedad esperada,
-   sin importar lo que haya devuelto Firebase o localStorage. */
-function normalizeData(d){
-  d = (d && typeof d === "object") ? d : {};
-  d.maestros = (d.maestros && typeof d.maestros === "object") ? d.maestros : {};
-  d.maestros.salud = Array.isArray(d.maestros.salud) ? d.maestros.salud : [];
-  d.maestros.encomiendas = Array.isArray(d.maestros.encomiendas) ? d.maestros.encomiendas : [];
-  d.maestros.otros = Array.isArray(d.maestros.otros) ? d.maestros.otros : [];
-  d.biotrom = (d.biotrom && typeof d.biotrom === "object") ? d.biotrom : { ...BIOTROM_DEFAULT };
-  d.biotrom.id = BIOTROM_ID;
-  d.biotrom.nombre = d.biotrom.nombre || BIOTROM_DEFAULT.nombre;
-  d.biotrom.ubicacion = d.biotrom.ubicacion != null ? d.biotrom.ubicacion : BIOTROM_DEFAULT.ubicacion;
-  d.dias = Array.isArray(d.dias) ? d.dias : [];
-  d.dias.forEach((dia,idx)=>{
+function normalizeDiasArray(arr){
+  arr = Array.isArray(arr) ? arr : [];
+  arr.forEach((dia,idx)=>{
     dia.id = dia.id || uid();
     dia.fecha = dia.fecha || "";
     dia.usarManual = !!dia.usarManual;
     dia.horasExtraManual = dia.horasExtraManual != null ? dia.horasExtraManual : "";
     dia.obs = dia.obs || "";
-    dia.creadoTs = dia.creadoTs != null ? dia.creadoTs : idx; // orden estable para datos viejos sin creadoTs
+    dia.creadoTs = dia.creadoTs != null ? dia.creadoTs : idx;
     dia.movimientos = Array.isArray(dia.movimientos) ? dia.movimientos : [];
     dia.movimientos.forEach(mv=>{
       mv.id = mv.id || uid();
@@ -643,11 +775,65 @@ function normalizeData(d){
       mv.gastos = Array.isArray(mv.gastos) ? mv.gastos : [];
     });
   });
+  return arr;
+}
+
+/* Normaliza la forma de DATA para que nunca falte una propiedad esperada,
+   sin importar lo que haya devuelto Firebase o localStorage. */
+function normalizeData(d){
+  d = (d && typeof d === "object") ? d : {};
+  d.maestros = (d.maestros && typeof d.maestros === "object") ? d.maestros : {};
+  d.maestros.salud = Array.isArray(d.maestros.salud) ? d.maestros.salud : [];
+  d.maestros.encomiendas = Array.isArray(d.maestros.encomiendas) ? d.maestros.encomiendas : [];
+  d.maestros.otros = Array.isArray(d.maestros.otros) ? d.maestros.otros : [];
+  d.biotrom = (d.biotrom && typeof d.biotrom === "object") ? d.biotrom : { ...BIOTROM_DEFAULT };
+  d.biotrom.id = BIOTROM_ID;
+  d.biotrom.nombre = d.biotrom.nombre || BIOTROM_DEFAULT.nombre;
+  d.biotrom.ubicacion = d.biotrom.ubicacion != null ? d.biotrom.ubicacion : BIOTROM_DEFAULT.ubicacion;
+
+  /* Migración de formato viejo (un solo DATA.dias) a movs.leo, por compatibilidad. */
+  d.movs = (d.movs && typeof d.movs === "object") ? d.movs : {};
+  if(!d.movs.leo && !d.movs.tito && Array.isArray(d.dias)){
+    d.movs.leo = { dias: d.dias };
+    d.movs.tito = { dias: [] };
+  }
+  PERSONAS.forEach(p=>{
+    d.movs[p] = (d.movs[p] && typeof d.movs[p] === "object") ? d.movs[p] : { dias: [] };
+    d.movs[p].dias = normalizeDiasArray(d.movs[p].dias);
+  });
+
   d.metaAprobacion = d.metaAprobacion || "";
   d.metaVigor = d.metaVigor || "";
+
   d.pagos = (d.pagos && typeof d.pagos === "object") ? d.pagos : {};
-  d.pagos.dias = (d.pagos.dias && typeof d.pagos.dias === "object") ? d.pagos.dias : {};
-  d.pagos.semanas = (d.pagos.semanas && typeof d.pagos.semanas === "object") ? d.pagos.semanas : {};
+  if(!d.pagos.leo && !d.pagos.tito && (d.pagos.dias || d.pagos.semanas)){
+    d.pagos = { leo: { dias: d.pagos.dias||{}, semanas: d.pagos.semanas||{} }, tito: { dias:{}, semanas:{} } };
+  }
+  PERSONAS.forEach(p=>{
+    d.pagos[p] = (d.pagos[p] && typeof d.pagos[p] === "object") ? d.pagos[p] : { dias:{}, semanas:{} };
+    d.pagos[p].dias = (d.pagos[p].dias && typeof d.pagos[p].dias === "object") ? d.pagos[p].dias : {};
+    d.pagos[p].semanas = (d.pagos[p].semanas && typeof d.pagos[p].semanas === "object") ? d.pagos[p].semanas : {};
+  });
+
+  d.usuarios = (d.usuarios && typeof d.usuarios === "object") ? d.usuarios : {};
+  if(Object.keys(d.usuarios).length === 0){
+    d.usuarios = JSON.parse(JSON.stringify(DEFAULT_USUARIOS));
+  } else {
+    Object.keys(d.usuarios).forEach(k=>{
+      const u = d.usuarios[k];
+      const base = DEFAULT_USUARIOS[k]; // si es uno de los 4 usuarios de fábrica, sirve de referencia
+      u.password = (typeof u.password === "string" && u.password) ? u.password : "2026";
+      u.permisos = (u.permisos && typeof u.permisos === "object") ? u.permisos : {};
+      u.personas = (u.personas && typeof u.personas === "object") ? u.personas : {};
+      ["movimientos","maestros","pagos","administracion"].forEach(p=>{
+        if(typeof u.permisos[p] !== "boolean") u.permisos[p] = base ? !!base.permisos[p] : false;
+      });
+      PERSONAS.forEach(p=>{
+        if(typeof u.personas[p] !== "boolean") u.personas[p] = base ? !!base.personas[p] : false;
+      });
+    });
+  }
+
   return d;
 }
 
@@ -658,11 +844,12 @@ function defaultData(){
       encomiendas: [ { id: uid(), nombre: "Correo Argentino - Sucursal", ubicacion: "" } ],
       otros: [ { id: uid(), nombre: "Centro de Esterilización", ubicacion: "" } ]
     },
-    dias: [],
+    movs: { leo: { dias: [] }, tito: { dias: [] } },
     biotrom: { ...BIOTROM_DEFAULT },
     metaAprobacion: "",
     metaVigor: "",
-    pagos: { dias: {}, semanas: {} }
+    pagos: { leo: { dias:{}, semanas:{} }, tito: { dias:{}, semanas:{} } },
+    usuarios: {}
   };
 }
 
@@ -736,6 +923,8 @@ setInterval(async ()=>{
       DATA = normalizeData(remote.data); lastTs = remote.ts;
       lsSet(LS_KEY, { data: DATA, ts: lastTs });
       renderMaestros(); renderDias();
+      if(currentUser && permisosActuales().pagos) renderPagos();
+      if(currentUser && permisosActuales().administracion) renderUsuarios();
     }
     setSyncStatus("En vivo","sync-ok");
   }catch(e){
@@ -775,7 +964,9 @@ function timeToMin(t){
 }
 function formatARS(n){
   n = Number(n)||0;
-  return "$" + n.toLocaleString("es-AR", { minimumFractionDigits:2, maximumFractionDigits:2 });
+  const neg = n < 0;
+  const abs = Math.abs(n).toLocaleString("es-AR", { minimumFractionDigits:2, maximumFractionDigits:2 });
+  return (neg ? "-$" : "$") + abs;
 }
 function formatMonto(n){
   n = Number(n)||0;
@@ -1185,9 +1376,9 @@ function renderPickerPanel(mv, cual){
    KPIs
 ============================================================ */
 function renderKPIs(){
-  const diasConMov = DATA.dias.filter(d => d.movimientos.length > 0);
-  const totalViajes = DATA.dias.reduce((acc,d)=>acc + d.movimientos.length, 0);
-  const totalKm = DATA.dias.reduce((acc,d)=>acc + d.movimientos.reduce((a,mv)=>a + (Number(mv.km)||0), 0), 0);
+  const diasConMov = DATA.movs[movPersonaActual].dias.filter(d => d.movimientos.length > 0);
+  const totalViajes = DATA.movs[movPersonaActual].dias.reduce((acc,d)=>acc + d.movimientos.length, 0);
+  const totalKm = DATA.movs[movPersonaActual].dias.reduce((acc,d)=>acc + d.movimientos.reduce((a,mv)=>a + (Number(mv.km)||0), 0), 0);
   const diasCount = diasConMov.length;
   const promViajes = diasCount ? totalViajes / diasCount : 0;
   const promKm = diasCount ? totalKm / diasCount : 0;
@@ -1219,14 +1410,51 @@ function computeDiaTotals(dia){
   return { kmTotal, gastoTotal, heAuto };
 }
 
+/* ============================================================
+   SWITCHER DE PERSONA (Leo / Tito) — Movimientos y Pagos
+============================================================ */
+function renderMovPersonaSwitch(){
+  const wrap = document.getElementById("movPersonaSwitch");
+  const permitidas = personasPermitidasActuales();
+  wrap.style.display = permitidas.length > 1 ? "flex" : "none";
+  wrap.querySelectorAll(".persona-btn").forEach(btn=>{
+    btn.classList.toggle("active", btn.getAttribute("data-persona") === movPersonaActual);
+  });
+}
+function renderPagosPersonaSwitch(){
+  const wrap = document.getElementById("pagosPersonaSwitch");
+  const permitidas = personasPermitidasActuales();
+  wrap.style.display = permitidas.length > 1 ? "flex" : "none";
+  wrap.querySelectorAll(".persona-btn").forEach(btn=>{
+    btn.classList.toggle("active", btn.getAttribute("data-persona") === pagosPersonaActual);
+  });
+}
+document.getElementById("movPersonaSwitch").addEventListener("click", e=>{
+  const btn = e.target.closest(".persona-btn");
+  if(!btn) return;
+  const p = btn.getAttribute("data-persona");
+  if(!personasPermitidasActuales().includes(p)) return;
+  movPersonaActual = p;
+  renderDias();
+});
+document.getElementById("pagosPersonaSwitch").addEventListener("click", e=>{
+  const btn = e.target.closest(".persona-btn");
+  if(!btn) return;
+  const p = btn.getAttribute("data-persona");
+  if(!personasPermitidasActuales().includes(p)) return;
+  pagosPersonaActual = p;
+  renderPagos();
+});
+
 function renderDias(){
+  renderMovPersonaSwitch();
   const cont = document.getElementById("diasContainer");
-  if(DATA.dias.length === 0){
+  if(DATA.movs[movPersonaActual].dias.length === 0){
     cont.innerHTML = '<div class="empty-hint">Sin días registrados. Usá "+ Nuevo Día" para comenzar.</div>';
     renderKPIs();
     return;
   }
-  const ordenados = [...DATA.dias].sort((a,b)=> {
+  const ordenados = [...DATA.movs[movPersonaActual].dias].sort((a,b)=> {
     const df = parseDiaKey(b.fecha) - parseDiaKey(a.fecha);
     if(df !== 0) return df;
     return (b.creadoTs||0) - (a.creadoTs||0);
@@ -1399,7 +1627,7 @@ document.getElementById("btnNuevoDia").addEventListener("click", ()=>{
   const dd = String(hoy.getDate()).padStart(2,"0");
   const mm = String(hoy.getMonth()+1).padStart(2,"0");
   const aa = String(hoy.getFullYear()).slice(-2);
-  DATA.dias.push({
+  DATA.movs[movPersonaActual].dias.push({
     id: uid(), fecha: dd+"/"+mm+"/"+aa, usarManual: false, horasExtraManual: "", obs: "", creadoTs: Date.now(), movimientos: []
   });
   renderDias();
@@ -1413,12 +1641,12 @@ diasContainer.addEventListener("click", e=>{
   const action = e.target.closest("[data-action]") ? e.target.closest("[data-action]").getAttribute("data-action") : null;
   const diaEl = e.target.closest("[data-dia-id]");
   if(!diaEl) return;
-  const dia = DATA.dias.find(d=>d.id===diaEl.getAttribute("data-dia-id"));
+  const dia = DATA.movs[movPersonaActual].dias.find(d=>d.id===diaEl.getAttribute("data-dia-id"));
   if(!dia) return;
 
   if(action === "del-dia"){
     if(!confirm("¿Eliminar este día y todos sus movimientos?")) return;
-    DATA.dias = DATA.dias.filter(d=>d.id!==dia.id);
+    DATA.movs[movPersonaActual].dias = DATA.movs[movPersonaActual].dias.filter(d=>d.id!==dia.id);
     renderDias(); persistir(); return;
   }
   if(action === "add-mov"){
@@ -1535,7 +1763,7 @@ diasContainer.addEventListener("input", e=>{
   }
   const diaEl = e.target.closest("[data-dia-id]");
   if(!diaEl) return;
-  const dia = DATA.dias.find(d=>d.id===diaEl.getAttribute("data-dia-id"));
+  const dia = DATA.movs[movPersonaActual].dias.find(d=>d.id===diaEl.getAttribute("data-dia-id"));
   if(!dia) return;
   const field = e.target.getAttribute("data-field");
 
@@ -1572,7 +1800,7 @@ diasContainer.addEventListener("focusin", e=>{
     const mvEl = e.target.closest("tr[data-mv-id]");
     const diaEl = e.target.closest("[data-dia-id]");
     if(!gastoEl || !mvEl || !diaEl) return;
-    const dia = DATA.dias.find(d=>d.id===diaEl.getAttribute("data-dia-id"));
+    const dia = DATA.movs[movPersonaActual].dias.find(d=>d.id===diaEl.getAttribute("data-dia-id"));
     const mv = dia && dia.movimientos.find(m=>m.id===mvEl.getAttribute("data-mv-id"));
     const gasto = mv && (mv.gastos||[]).find(g=>g.id===gastoEl.getAttribute("data-gasto-id"));
     if(gasto){
@@ -1587,7 +1815,7 @@ diasContainer.addEventListener("focusout", e=>{
     const mvEl = e.target.closest("tr[data-mv-id]");
     const diaEl = e.target.closest("[data-dia-id]");
     if(!gastoEl || !mvEl || !diaEl) return;
-    const dia = DATA.dias.find(d=>d.id===diaEl.getAttribute("data-dia-id"));
+    const dia = DATA.movs[movPersonaActual].dias.find(d=>d.id===diaEl.getAttribute("data-dia-id"));
     const mv = dia && dia.movimientos.find(m=>m.id===mvEl.getAttribute("data-mv-id"));
     const gasto = mv && (mv.gastos||[]).find(g=>g.id===gastoEl.getAttribute("data-gasto-id"));
     if(gasto){
@@ -1606,7 +1834,7 @@ diasContainer.addEventListener("focusout", e=>{
 diasContainer.addEventListener("change", e=>{
   const diaEl = e.target.closest("[data-dia-id]");
   if(!diaEl) return;
-  const dia = DATA.dias.find(d=>d.id===diaEl.getAttribute("data-dia-id"));
+  const dia = DATA.movs[movPersonaActual].dias.find(d=>d.id===diaEl.getAttribute("data-dia-id"));
   if(!dia) return;
   const field = e.target.getAttribute("data-field");
 
@@ -1664,17 +1892,12 @@ document.getElementById("metaVigor").addEventListener("change", e=>{ DATA.metaVi
 document.querySelectorAll(".nav-links a").forEach(a=>{
   a.addEventListener("click", ()=>{
     const targetId = a.getAttribute("data-target");
-    const prevActive = document.querySelector(".section-page.active");
-    const prevId = prevActive ? prevActive.id : null;
     document.querySelectorAll(".nav-links a").forEach(x=>x.classList.remove("active"));
     document.querySelectorAll(".section-page").forEach(x=>x.classList.remove("active"));
     a.classList.add("active");
     document.getElementById(targetId).classList.add("active");
     window.scrollTo({ top:0, behavior:"instant" in window ? "instant" : "auto" });
-    if(prevId === "pagos" && targetId !== "pagos"){
-      resetPagosLock();
-    }
-    if(targetId === "pagos" && pagosUnlocked) renderPagos();
+    if(targetId === "pagos") renderPagos();
   });
 });
 
@@ -1717,7 +1940,7 @@ document.getElementById("btnImprimir").addEventListener("click", ()=> window.pri
 const GOOGLE_CLIENT_ID = "951183674911-s3vqfcsi8ggj6n65usisebiujfquqfbe.apps.googleusercontent.com";
 const GOOGLE_SPREADSHEET_ID = "1_lltsOvmi02P_49aLMBelJUBZgvbt-3q-iezcp97uP0";
 const GOOGLE_SHEET_NAME = "Migracion";
-const MIGRACION_HEADER = ["Día","Hora Inicio","Hora Fin","Punto de Partida","Punto de Llegada","Km","Gasto Extra","Monto Gasto Extra","Observaciones"];
+const MIGRACION_HEADER = ["Chofer","Día","Hora Inicio","Hora Fin","Punto de Partida","Punto de Llegada","Km","Gasto Extra","Monto Gasto Extra","Observaciones"];
 
 /* Formatea el día para el Excel/Sheets: "Viernes 31 de julio de 26" */
 const DIAS_SEMANA_MIGRACION = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
@@ -1734,11 +1957,12 @@ function formatDiaExcel(fecha){
 }
 
 /* Construye las filas (array de arrays) de un día para Excel/Sheets,
-   con Gasto Extra y su Monto en columnas separadas. */
-function construirFilasDia(dia, filas){
+   con Gasto Extra y su Monto en columnas separadas, y el nombre del
+   chofer (Leo/Tito) en la primera columna. */
+function construirFilasDia(dia, filas, personaLabel){
   const diaTxt = formatDiaExcel(dia.fecha);
   if(dia.movimientos.length === 0){
-    filas.push([diaTxt,"","","","","","","", dia.obs||""]);
+    filas.push([personaLabel, diaTxt,"","","","","","","", dia.obs||""]);
     return;
   }
   ordenarPorHoraInicio(dia.movimientos).forEach(mv=>{
@@ -1747,7 +1971,7 @@ function construirFilasDia(dia, filas){
     ).join(" | ");
     const gastosMontos = (mv.gastos||[]).map(g=> formatMonto(g.monto)).join(" | ");
     filas.push([
-      diaTxt, mv.horaIni||"", mv.horaFin||"",
+      personaLabel, diaTxt, mv.horaIni||"", mv.horaFin||"",
       nombrePunto(mv,"partida"), nombrePunto(mv,"llegada"),
       mv.km!=null?mv.km:"", gastosTipos, gastosMontos, dia.obs||""
     ]);
@@ -1755,8 +1979,9 @@ function construirFilasDia(dia, filas){
 }
 
 /* Sube a Google Sheets: agrega el encabezado solo si la hoja está vacía,
-   y omite (sin sobreescribir) los días cuya fecha ya figura en la columna A. */
-function subirAGoogleSheets(diasFiltrados){
+   y omite (sin sobreescribir) los días cuya fecha ya figura en la columna
+   A+B para ese mismo chofer. */
+function subirAGoogleSheets(diasFiltrados, personaLabel){
   return new Promise((resolve, reject)=>{
     if(!GOOGLE_CLIENT_ID || !GOOGLE_SPREADSHEET_ID){
       reject(new Error("Integración con Google Drive no configurada todavía."));
@@ -1773,7 +1998,7 @@ function subirAGoogleSheets(diasFiltrados){
         if(resp.error){ reject(new Error(resp.error)); return; }
         try{
           const token = resp.access_token;
-          const colRange = encodeURIComponent(`${GOOGLE_SHEET_NAME}!A:A`);
+          const colRange = encodeURIComponent(`${GOOGLE_SHEET_NAME}!A:B`);
           const getUrl = `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SPREADSHEET_ID}/values/${colRange}`;
           const rGet = await fetch(getUrl, { headers: { "Authorization": "Bearer " + token } });
           if(!rGet.ok) throw new Error("No se pudo leer la planilla (HTTP " + rGet.status + ")");
@@ -1781,12 +2006,15 @@ function subirAGoogleSheets(diasFiltrados){
           const filasExistentes = dataGet.values || [];
           const hayHeader = filasExistentes.length > 0;
           const diasYaCargados = new Set(
-            filasExistentes.slice(hayHeader ? 1 : 0).map(f => (f[0]||"").trim()).filter(Boolean)
+            filasExistentes.slice(hayHeader ? 1 : 0)
+              .map(f => `${(f[0]||"").trim()}|${(f[1]||"").trim()}`)
+              .filter(k => k !== "|")
           );
 
           const diasNuevos = [], diasOmitidos = [];
           diasFiltrados.forEach(dia=>{
-            if(diasYaCargados.has(formatDiaExcel(dia.fecha))) diasOmitidos.push(dia.fecha);
+            const clave = `${personaLabel}|${formatDiaExcel(dia.fecha)}`;
+            if(diasYaCargados.has(clave)) diasOmitidos.push(dia.fecha);
             else diasNuevos.push(dia);
           });
 
@@ -1797,7 +2025,7 @@ function subirAGoogleSheets(diasFiltrados){
 
           const filas = [];
           if(!hayHeader) filas.push([...MIGRACION_HEADER]);
-          diasNuevos.forEach(dia=> construirFilasDia(dia, filas));
+          diasNuevos.forEach(dia=> construirFilasDia(dia, filas, personaLabel));
 
           const range = encodeURIComponent(`${GOOGLE_SHEET_NAME}!A1`);
           const postUrl = `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SPREADSHEET_ID}/values/${range}:append?valueInputOption=USER_ENTERED`;
@@ -1837,47 +2065,16 @@ document.getElementById("migrarHastaNative").addEventListener("change", e=>{
 });
 
 /* ============================================================
-   CONTRASEÑA PARA MIGRAR A EXCEL / GOOGLE SHEETS
-   Pide la contraseña cada vez que se toca el botón (no se recuerda
-   entre aperturas). Barrera solo visual del lado del cliente, igual
-   que en Pagos.
+   PANEL "MIGRAR A EXCEL"
+   Ya no pide contraseña propia: solo lo puede abrir quien tenga el
+   permiso "pagos" habilitado (ver aplicarPermisos / hoja Usuarios).
 ============================================================ */
-const MIGRAR_PASSWORD = "2026";
-
-function abrirPanelMigrar(){
-  const panel = document.getElementById("migrarPanel");
-  panel.style.display = "flex";
-  document.getElementById("migrarMsg").textContent = "";
-}
-function abrirModalMigrar(){
-  document.getElementById("migrarPasswordInput").value = "";
-  document.getElementById("migrarModalError").classList.remove("show");
-  document.getElementById("migrarModal").classList.add("open");
-  document.getElementById("migrarPasswordInput").focus();
-}
-function cerrarModalMigrar(){
-  document.getElementById("migrarModal").classList.remove("open");
-}
-function intentarDesbloquearMigrar(){
-  const val = document.getElementById("migrarPasswordInput").value;
-  if(val === MIGRAR_PASSWORD){
-    cerrarModalMigrar();
-    abrirPanelMigrar();
-  } else {
-    document.getElementById("migrarModalError").classList.add("show");
-  }
-}
-document.getElementById("btnMigrarModalIngresar").addEventListener("click", intentarDesbloquearMigrar);
-document.getElementById("migrarPasswordInput").addEventListener("keydown", e=>{
-  if(e.key === "Enter") intentarDesbloquearMigrar();
-});
-document.getElementById("btnMigrarModalCancelar").addEventListener("click", cerrarModalMigrar);
-document.getElementById("migrarModal").addEventListener("click", e=>{
-  if(e.target.id === "migrarModal") cerrarModalMigrar();
-});
-
 document.getElementById("btnMigrar").addEventListener("click", ()=>{
-  abrirModalMigrar();
+  if(!permisosActuales().pagos) return;
+  const panel = document.getElementById("migrarPanel");
+  const abrir = panel.style.display === "none";
+  panel.style.display = abrir ? "flex" : "none";
+  if(abrir) document.getElementById("migrarMsg").textContent = "";
 });
 document.getElementById("btnCancelarMigrar").addEventListener("click", ()=>{
   document.getElementById("migrarPanel").style.display = "none";
@@ -1898,7 +2095,7 @@ document.getElementById("btnGenerarMigracion").addEventListener("click", ()=>{
     msg.style.color = "var(--err-text)";
     return;
   }
-  const diasFiltrados = DATA.dias.filter(d=>{
+  const diasFiltrados = DATA.movs[movPersonaActual].dias.filter(d=>{
     const k = parseDiaKey(d.fecha);
     return k && k >= Math.min(desdeKey,hastaKey) && k <= Math.max(desdeKey,hastaKey);
   }).sort((a,b)=> parseDiaKey(b.fecha) - parseDiaKey(a.fecha));
@@ -1909,18 +2106,20 @@ document.getElementById("btnGenerarMigracion").addEventListener("click", ()=>{
     return;
   }
 
+  const personaLabel = PERSONA_NOMBRE[movPersonaActual];
+
   if(GOOGLE_CLIENT_ID && GOOGLE_SPREADSHEET_ID){
     msg.textContent = "Subiendo a Google Sheets...";
     msg.style.color = "var(--text-2)";
-    subirAGoogleSheets(diasFiltrados).then(res=>{
+    subirAGoogleSheets(diasFiltrados, personaLabel).then(res=>{
       if(res.subidas === 0){
-        msg.textContent = `No se subió nada: ${res.omitidos.length===1?"el día":"los días"} ${res.omitidos.join(", ")} ya estaba${res.omitidos.length===1?"":"n"} cargado${res.omitidos.length===1?"":"s"}.`;
+        msg.textContent = `No se subió nada: ${res.omitidos.length===1?"el día":"los días"} ${res.omitidos.join(", ")} de ${personaLabel} ya estaba${res.omitidos.length===1?"":"n"} cargado${res.omitidos.length===1?"":"s"}.`;
         msg.style.color = "var(--warn-text)";
       } else if(res.omitidos.length > 0){
-        msg.textContent = `Se subieron ${res.subidas} día(s) nuevos. Se omitieron (ya estaban cargados): ${res.omitidos.join(", ")}.`;
+        msg.textContent = `Se subieron ${res.subidas} día(s) nuevos de ${personaLabel}. Se omitieron (ya estaban cargados): ${res.omitidos.join(", ")}.`;
         msg.style.color = "var(--ok-text)";
       } else {
-        msg.textContent = `Listo: se subieron ${res.subidas} día(s) a la planilla de Drive.`;
+        msg.textContent = `Listo: se subieron ${res.subidas} día(s) de ${personaLabel} a la planilla de Drive.`;
         msg.style.color = "var(--ok-text)";
       }
     }).catch(err=>{
@@ -1929,12 +2128,12 @@ document.getElementById("btnGenerarMigracion").addEventListener("click", ()=>{
     });
   } else {
     const filas = [[...MIGRACION_HEADER]];
-    diasFiltrados.forEach(dia=> construirFilasDia(dia, filas));
+    diasFiltrados.forEach(dia=> construirFilasDia(dia, filas, personaLabel));
     const ws = XLSX.utils.aoa_to_sheet(filas);
-    ws["!cols"] = [{wch:24},{wch:10},{wch:10},{wch:26},{wch:26},{wch:8},{wch:22},{wch:14},{wch:30}];
+    ws["!cols"] = [{wch:10},{wch:24},{wch:10},{wch:10},{wch:26},{wch:26},{wch:8},{wch:22},{wch:14},{wch:30}];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Migracion");
-    const nombreArchivo = `Migracion_Movimientos_${desdeStr.replace(/\//g,"-")}_a_${hastaStr.replace(/\//g,"-")}.xlsx`;
+    const nombreArchivo = `Migracion_${personaLabel}_${desdeStr.replace(/\//g,"-")}_a_${hastaStr.replace(/\//g,"-")}.xlsx`;
     XLSX.writeFile(wb, nombreArchivo);
     msg.textContent = `La subida a Drive no está configurada — se descargó "${nombreArchivo}" (${filas.length-1} filas) en su lugar.`;
     msg.style.color = "var(--warn-text)";
@@ -1942,36 +2141,10 @@ document.getElementById("btnGenerarMigracion").addEventListener("click", ()=>{
 });
 
 /* ============================================================
-   HOJA PAGOS (protegida con contraseña simple del lado cliente)
-   OJO: esto es solo una barrera visual, no seguridad real — cualquiera
-   que vea el código fuente del archivo puede encontrar la contraseña.
+   HOJA PAGOS
+   El acceso ya no usa contraseña: se controla por el permiso "pagos"
+   del usuario logueado (ver aplicarPermisos / hoja Usuarios).
 ============================================================ */
-const PAGOS_PASSWORD = "2026";
-let pagosUnlocked = false;
-
-document.getElementById("btnPagosUnlock").addEventListener("click", intentarDesbloquearPagos);
-document.getElementById("pagosPasswordInput").addEventListener("keydown", e=>{
-  if(e.key === "Enter") intentarDesbloquearPagos();
-});
-function intentarDesbloquearPagos(){
-  const val = document.getElementById("pagosPasswordInput").value;
-  if(val === PAGOS_PASSWORD){
-    pagosUnlocked = true;
-    document.getElementById("pagosLock").style.display = "none";
-    document.getElementById("pagosContent").style.display = "block";
-    document.getElementById("pagosError").style.display = "none";
-    renderPagos();
-  } else {
-    document.getElementById("pagosError").style.display = "block";
-  }
-}
-function resetPagosLock(){
-  pagosUnlocked = false;
-  document.getElementById("pagosLock").style.display = "block";
-  document.getElementById("pagosContent").style.display = "none";
-  document.getElementById("pagosError").style.display = "none";
-  document.getElementById("pagosPasswordInput").value = "";
-}
 
 const DIAS_SEMANA_PAGOS = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
 const MESES_ABR_PAGOS = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
@@ -1996,8 +2169,9 @@ function isoWeekKey(dt){
 }
 
 function renderPagos(){
+  renderPagosPersonaSwitch();
   const tbody = document.getElementById("tbodyPagos");
-  const diasConFecha = DATA.dias
+  const diasConFecha = DATA.movs[pagosPersonaActual].dias
     .filter(d => parseFechaDDMMAA(d.fecha))
     .sort((a,b)=> parseDiaKey(a.fecha) - parseDiaKey(b.fecha)); // ascendente para calcular bien saldo/semana
 
@@ -2010,7 +2184,7 @@ function renderPagos(){
   const filas = diasConFecha.map(dia=>{
     const tot = computeDiaTotals(dia);
     const horasExtra = dia.usarManual ? (Number(dia.horasExtraManual)||0) : Math.round(tot.heAuto*100)/100;
-    const cfgDia = DATA.pagos.dias[dia.id] || {};
+    const cfgDia = DATA.pagos[pagosPersonaActual].dias[dia.id] || {};
     const costoKm = cfgDia.costoKm != null ? Number(cfgDia.costoKm) : 0;
     const costoHsExtra = cfgDia.costoHsExtra != null ? Number(cfgDia.costoHsExtra) : 0;
     const valorKm = costoKm * tot.kmTotal;
@@ -2038,7 +2212,7 @@ function renderPagos(){
   let saldoAnterior = 0;
   ordenSemanas.forEach(wk=>{
     const s = semanas[wk];
-    s.pago = (DATA.pagos.semanas[wk] && DATA.pagos.semanas[wk].pago != null) ? Number(DATA.pagos.semanas[wk].pago) : 0;
+    s.pago = (DATA.pagos[pagosPersonaActual].semanas[wk] && DATA.pagos[pagosPersonaActual].semanas[wk].pago != null) ? Number(DATA.pagos[pagosPersonaActual].semanas[wk].pago) : 0;
     s.saldo = saldoAnterior + s.debeAcumulado - s.pago;
     saldoAnterior = s.saldo;
   });
@@ -2100,17 +2274,226 @@ document.getElementById("tbodyPagos").addEventListener("focusout", e=>{
   if(field === "costoKm" || field === "costoHsExtra"){
     const tr = e.target.closest("tr[data-dia-id]");
     const diaId = tr.getAttribute("data-dia-id");
-    if(!DATA.pagos.dias[diaId]) DATA.pagos.dias[diaId] = {};
-    DATA.pagos.dias[diaId][field] = parseMonto(e.target.value);
+    if(!DATA.pagos[pagosPersonaActual].dias[diaId]) DATA.pagos[pagosPersonaActual].dias[diaId] = {};
+    DATA.pagos[pagosPersonaActual].dias[diaId][field] = parseMonto(e.target.value);
     renderPagos();
     persistir();
   } else if(field === "pago"){
     const wk = e.target.getAttribute("data-semana");
-    if(!DATA.pagos.semanas[wk]) DATA.pagos.semanas[wk] = {};
-    DATA.pagos.semanas[wk].pago = parseMonto(e.target.value);
+    if(!DATA.pagos[pagosPersonaActual].semanas[wk]) DATA.pagos[pagosPersonaActual].semanas[wk] = {};
+    DATA.pagos[pagosPersonaActual].semanas[wk].pago = parseMonto(e.target.value);
     renderPagos();
     persistir();
   }
+});
+
+/* ============================================================
+   LOGIN / PERMISOS
+============================================================ */
+let datosListos = false;
+
+function actualizarBotonLogin(){
+  const btn = document.getElementById("btnLoginIngresar");
+  if(datosListos){ btn.disabled = false; btn.textContent = "Ingresar"; }
+  else { btn.disabled = true; btn.textContent = "Cargando datos…"; }
+}
+
+function poblarLoginUsuarios(){
+  const sel = document.getElementById("loginUser");
+  const claves = Object.keys(DATA.usuarios).sort();
+  sel.innerHTML = claves.map(u=> `<option value="${u}">${u}</option>`).join("");
+}
+
+function intentarLogin(){
+  if(!datosListos) return;
+  const u = document.getElementById("loginUser").value;
+  const pass = document.getElementById("loginPassword").value;
+  const cuenta = DATA.usuarios[u];
+  const errorEl = document.getElementById("loginError");
+  if(cuenta && pass === cuenta.password){
+    currentUser = u;
+    errorEl.classList.remove("show");
+    document.getElementById("loginPassword").value = "";
+    document.getElementById("loginGate").style.display = "none";
+    document.getElementById("appRoot").style.display = "";
+    aplicarPermisos();
+  } else {
+    errorEl.classList.add("show");
+  }
+}
+document.getElementById("btnLoginIngresar").addEventListener("click", intentarLogin);
+document.getElementById("loginPassword").addEventListener("keydown", e=>{
+  if(e.key === "Enter") intentarLogin();
+});
+document.getElementById("btnSalir").addEventListener("click", ()=>{
+  currentUser = null;
+  poblarLoginUsuarios();
+  document.getElementById("loginPassword").value = "";
+  document.getElementById("loginError").classList.remove("show");
+  document.getElementById("appRoot").style.display = "none";
+  document.getElementById("loginGate").style.display = "flex";
+});
+
+/* Aplica el filtro de pestañas/personas/botón Migrar según el usuario logueado. */
+function aplicarPermisos(){
+  const perm = permisosActuales();
+
+  document.querySelectorAll(".nav-links a[data-target]").forEach(a=>{
+    const target = a.getAttribute("data-target");
+    const visible = target === "usuarios" ? !!perm.administracion : !!perm[target];
+    a.style.display = visible ? "" : "none";
+  });
+
+  const activa = document.querySelector(".nav-links a.active");
+  const activaVisible = activa && activa.style.display !== "none";
+  if(!activaVisible){
+    document.querySelectorAll(".nav-links a").forEach(x=>x.classList.remove("active"));
+    document.querySelectorAll(".section-page").forEach(x=>x.classList.remove("active"));
+    const primerVisible = Array.from(document.querySelectorAll(".nav-links a[data-target]"))
+      .find(a=> a.style.display !== "none");
+    if(primerVisible){
+      primerVisible.classList.add("active");
+      document.getElementById(primerVisible.getAttribute("data-target")).classList.add("active");
+    }
+  }
+
+  const personasPermitidas = personasPermitidasActuales();
+  movPersonaActual = personasPermitidas[0];
+  pagosPersonaActual = personasPermitidas[0];
+
+  document.getElementById("navUserLabel").textContent = currentUser;
+
+  renderDias();
+  actualizarBotonMigrar();
+  if(perm.administracion) renderUsuarios();
+}
+
+/* Habilita/deshabilita "Migrar a Excel" según si el usuario tiene permiso de Pagos. */
+function actualizarBotonMigrar(){
+  const btn = document.getElementById("btnMigrar");
+  const lock = document.getElementById("migrarLockMsg");
+  const permitido = !!permisosActuales().pagos;
+  btn.disabled = !permitido;
+  btn.style.opacity = permitido ? "1" : ".5";
+  btn.style.cursor = permitido ? "" : "not-allowed";
+  if(lock) lock.style.display = permitido ? "none" : "inline";
+  if(!permitido){
+    document.getElementById("migrarPanel").style.display = "none";
+  }
+}
+
+/* ============================================================
+   USUARIOS (solo quien tenga permiso "administracion"):
+   crear, borrar y editar usuario / contraseña / permisos / personas.
+============================================================ */
+function renderUsuarios(){
+  const tbody = document.getElementById("tbodyUsuarios");
+  if(!tbody) return;
+  const claves = Object.keys(DATA.usuarios).sort();
+  const chk = v => v ? "checked" : "";
+  tbody.innerHTML = claves.map((key, idx)=>{
+    const u = DATA.usuarios[key];
+    const perm = u.permisos || {};
+    const per = u.personas || {};
+    return `
+      <tr data-user="${key}">
+        <td class="row-num">${idx+1}</td>
+        <td><input type="text" data-field="usuario" value="${key}" style="font-family:var(--mono);"></td>
+        <td><input type="text" data-field="password" value="${String(u.password||"").replace(/"/g,"&quot;")}" style="font-family:var(--mono);" autocomplete="off"></td>
+        <td>
+          <div class="permisos-check-group">
+            <label><input type="checkbox" data-perm="movimientos" ${chk(perm.movimientos)}> movimientos</label>
+            <label><input type="checkbox" data-perm="maestros" ${chk(perm.maestros)}> maestros</label>
+            <label><input type="checkbox" data-perm="pagos" ${chk(perm.pagos)}> pagos</label>
+            <label><input type="checkbox" data-perm="administracion" ${chk(perm.administracion)}> administración</label>
+            <span class="permisos-sep">|</span>
+            <label><input type="checkbox" data-persona="leo" ${chk(per.leo)}> Leo</label>
+            <label><input type="checkbox" data-persona="tito" ${chk(per.tito)}> Tito</label>
+          </div>
+        </td>
+        <td class="no-print" style="text-align:center;"><button class="btn-del-row" data-action="del-usuario" title="Eliminar usuario">×</button></td>
+      </tr>
+    `;
+  }).join("");
+}
+
+document.getElementById("tbodyUsuarios").addEventListener("change", e=>{
+  const tr = e.target.closest("tr[data-user]");
+  if(!tr) return;
+  const key = tr.getAttribute("data-user");
+  const obj = DATA.usuarios[key];
+  if(!obj) return;
+
+  if(e.target.getAttribute("data-field") === "usuario"){
+    const nuevo = e.target.value.trim().toLowerCase().replace(/\s+/g,"");
+    if(!nuevo){ e.target.value = key; return; }
+    if(nuevo !== key){
+      if(DATA.usuarios[nuevo]){
+        alert(`Ya existe un usuario "${nuevo}".`);
+        e.target.value = key;
+        return;
+      }
+      delete DATA.usuarios[key];
+      DATA.usuarios[nuevo] = obj;
+      if(currentUser === key) currentUser = nuevo;
+    }
+    renderUsuarios();
+    persistir();
+    return;
+  }
+
+  if(e.target.getAttribute("data-field") === "password"){
+    const val = e.target.value.trim();
+    if(!val){ alert("La contraseña no puede quedar vacía."); renderUsuarios(); return; }
+    obj.password = val;
+    persistir();
+    return;
+  }
+
+  const perm = e.target.getAttribute("data-perm");
+  if(perm){
+    obj.permisos = obj.permisos || {};
+    obj.permisos[perm] = e.target.checked;
+    persistir();
+    if(key === currentUser) aplicarPermisos();
+    return;
+  }
+
+  const persona = e.target.getAttribute("data-persona");
+  if(persona){
+    obj.personas = obj.personas || {};
+    obj.personas[persona] = e.target.checked;
+    persistir();
+    if(key === currentUser) aplicarPermisos();
+    return;
+  }
+});
+
+document.getElementById("tbodyUsuarios").addEventListener("click", e=>{
+  const btn = e.target.closest('[data-action="del-usuario"]');
+  if(!btn) return;
+  const tr = btn.closest("tr[data-user]");
+  const key = tr.getAttribute("data-user");
+  if(Object.keys(DATA.usuarios).length <= 1){
+    alert("Tiene que quedar al menos un usuario.");
+    return;
+  }
+  if(!confirm(`¿Eliminar el usuario "${key}"? Esta acción no se puede deshacer.`)) return;
+  delete DATA.usuarios[key];
+  renderUsuarios();
+  persistir();
+});
+
+document.getElementById("btnAgregarUsuario").addEventListener("click", ()=>{
+  let n = 1;
+  while(DATA.usuarios["nuevo_usuario_"+n]) n++;
+  DATA.usuarios["nuevo_usuario_"+n] = {
+    password: "2026",
+    permisos: { movimientos:true, maestros:false, pagos:false, administracion:false },
+    personas: { leo:true, tito:false }
+  };
+  renderUsuarios();
+  persistir();
 });
 
 /* ============================================================
@@ -2129,7 +2512,11 @@ document.addEventListener("scroll", ()=>{
   }
 }, true);
 
-cargarInicial();
+cargarInicial().then(()=>{
+  datosListos = true;
+  poblarLoginUsuarios();
+  actualizarBotonLogin();
+});
 </script>
 </body>
 </html>
