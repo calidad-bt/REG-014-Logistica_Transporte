@@ -367,9 +367,16 @@ input.search-input:focus{outline:none; border-color:var(--accent); background:#f
 @media (max-width: 720px){
   .layout{padding:calc(var(--nav-h) + 14px) 10px 30px;}
   .nav-brand{font-size:9px; padding-right:8px;}
+  .nav-links{
+    flex:1 1 auto; min-width:0; overflow-x:auto; -webkit-overflow-scrolling:touch;
+    flex-wrap:nowrap;
+  }
   .nav-links a{padding:5px 8px; font-size:10px;}
-  .nav-end{gap:6px;}
+  .nav-end{flex:0 0 auto; gap:6px;}
+  #btnActualizar, #btnImprimir{display:none;}
   .nav-btn{padding:0 7px; font-size:10px;}
+  .user-chip{padding:3px 4px 3px 8px; gap:6px; margin-left:0;}
+  .user-chip #navUserLabel{font-size:10px;}
   #syncStatus{display:none;}
   .doc-header{grid-template-columns:56px 1fr;}
   .doc-logo{font-size:14px;}
@@ -382,6 +389,32 @@ input.search-input:focus{outline:none; border-color:var(--accent); background:#f
   table{min-width:790px;}
   .dia-header{gap:10px; padding:8px;}
   .card-body{padding:12px 10px 14px;}
+
+  /* Tabla de movimientos -> tarjetas apiladas en vez de tabla angosta */
+  table.mobile-cards{min-width:0; table-layout:auto; width:100%;}
+  table.mobile-cards thead{display:none;}
+  table.mobile-cards, table.mobile-cards tbody{display:block; width:100%;}
+  table.mobile-cards tr{
+    display:block; width:100%;
+    border:1px solid var(--border); border-radius:var(--radius);
+    margin-bottom:10px; background:var(--surface); overflow:visible;
+  }
+  table.mobile-cards tr:hover td{background:transparent;}
+  table.mobile-cards td{
+    display:block; width:100% !important;
+    border:none !important; border-bottom:1px solid var(--bg) !important;
+    padding:8px 10px; text-align:left !important;
+  }
+  table.mobile-cards tr td:last-child{border-bottom:none !important;}
+  table.mobile-cards td::before{
+    content:attr(data-label); display:block;
+    font-size:9px; font-weight:700; text-transform:uppercase;
+    letter-spacing:.05em; color:var(--text-2); margin-bottom:4px;
+  }
+  table.mobile-cards td[data-label="#"]{display:none;}
+  table.mobile-cards td[data-label="Eliminar"]{padding:10px;}
+  table.mobile-cards td[data-label="Eliminar"] .btn-del-row{width:100%; height:32px; font-size:15px;}
+  table.mobile-cards .empty-hint{display:block; padding:14px;}
 }
 
 /* ---------- PRINT ---------- */
@@ -565,14 +598,23 @@ input.search-input:focus{outline:none; border-color:var(--accent); background:#f
         </div>
         <button class="btn-add-row no-print" data-cat="encomiendas" style="margin-bottom:26px;">+ Agregar Encomienda</button>
 
-        <div class="section-title">Maestro — Servicios Varios (Esterilización, etc.)</div>
+        <div class="section-title">Maestro — Esterilizadoras</div>
         <div class="table-scroll" style="margin-bottom:16px;">
           <table>
             <thead><tr><th style="width:26px;"></th><th>Nombre</th><th>Ubicación (dirección)</th><th style="width:36px;" class="no-print"></th></tr></thead>
-            <tbody id="tbodyOtros"></tbody>
+            <tbody id="tbodyEsterilizadoras"></tbody>
           </table>
         </div>
-        <button class="btn-add-row no-print" data-cat="otros">+ Agregar a Servicios Varios</button>
+        <button class="btn-add-row no-print" data-cat="esterilizadoras" style="margin-bottom:26px;">+ Agregar Esterilizadora</button>
+
+        <div class="section-title">Maestro — Proveedores y Clientes</div>
+        <div class="table-scroll" style="margin-bottom:16px;">
+          <table>
+            <thead><tr><th style="width:26px;"></th><th>Nombre</th><th>Ubicación (dirección)</th><th style="width:36px;" class="no-print"></th></tr></thead>
+            <tbody id="tbodyProveedores"></tbody>
+          </table>
+        </div>
+        <button class="btn-add-row no-print" data-cat="proveedores">+ Agregar Proveedor / Cliente</button>
 
       </div>
     </div>
@@ -742,7 +784,7 @@ let movPersonaActual = "leo";   // persona activa en la hoja Movimientos
 let pagosPersonaActual = "leo"; // persona activa en la hoja Pagos
 
 let DATA = {
-  maestros: { salud: [], encomiendas: [], otros: [] },
+  maestros: { salud: [], encomiendas: [], esterilizadoras: [], proveedores: [] },
   movs: { leo: { dias: [] }, tito: { dias: [] } },
   biotrom: { ...BIOTROM_DEFAULT },
   metaAprobacion: "",
@@ -785,7 +827,10 @@ function normalizeData(d){
   d.maestros = (d.maestros && typeof d.maestros === "object") ? d.maestros : {};
   d.maestros.salud = Array.isArray(d.maestros.salud) ? d.maestros.salud : [];
   d.maestros.encomiendas = Array.isArray(d.maestros.encomiendas) ? d.maestros.encomiendas : [];
-  d.maestros.otros = Array.isArray(d.maestros.otros) ? d.maestros.otros : [];
+  d.maestros.esterilizadoras = Array.isArray(d.maestros.esterilizadoras) ? d.maestros.esterilizadoras
+    : (Array.isArray(d.maestros.otros) ? d.maestros.otros : []); // migración desde la categoría vieja "otros"
+  d.maestros.proveedores = Array.isArray(d.maestros.proveedores) ? d.maestros.proveedores : [];
+  delete d.maestros.otros;
   d.biotrom = (d.biotrom && typeof d.biotrom === "object") ? d.biotrom : { ...BIOTROM_DEFAULT };
   d.biotrom.id = BIOTROM_ID;
   d.biotrom.nombre = d.biotrom.nombre || BIOTROM_DEFAULT.nombre;
@@ -842,7 +887,8 @@ function defaultData(){
     maestros: {
       salud: [ { id: uid(), nombre: "Hospital Central", ubicacion: "" } ],
       encomiendas: [ { id: uid(), nombre: "Correo Argentino - Sucursal", ubicacion: "" } ],
-      otros: [ { id: uid(), nombre: "Centro de Esterilización", ubicacion: "" } ]
+      esterilizadoras: [ { id: uid(), nombre: "Centro de Esterilización", ubicacion: "" } ],
+      proveedores: [ { id: uid(), nombre: "Proveedor / Cliente Ejemplo", ubicacion: "" } ]
     },
     movs: { leo: { dias: [] }, tito: { dias: [] } },
     biotrom: { ...BIOTROM_DEFAULT },
@@ -890,7 +936,7 @@ async function verificarTodosMaestrosInicial(){
     await verificarUbicacionMaestro("biotrom", DATA.biotrom.id);
     await new Promise(res=>setTimeout(res, 350));
   }
-  const cats = ["salud","encomiendas","otros"];
+  const cats = ["salud","encomiendas","esterilizadoras","proveedores"];
   for(const cat of cats){
     for(const m of DATA.maestros[cat]){
       if(m.ubicacion && m.ubicacion.trim() && m._lat == null){
@@ -1003,7 +1049,7 @@ function esMismoPunto(idNuevo, libreNuevo, idOtro, libreOtro){
 }
 function findMaestro(id){
   if(DATA.biotrom && id === DATA.biotrom.id) return DATA.biotrom;
-  const all = [...DATA.maestros.salud, ...DATA.maestros.encomiendas, ...DATA.maestros.otros];
+  const all = [...DATA.maestros.salud, ...DATA.maestros.encomiendas, ...DATA.maestros.esterilizadoras, ...DATA.maestros.proveedores];
   return all.find(m => m.id === id) || null;
 }
 
@@ -1169,7 +1215,8 @@ function renderMaestros(){
   renderBiotromRow();
   renderMaestroTabla("salud","tbodySalud");
   renderMaestroTabla("encomiendas","tbodyEncomiendas");
-  renderMaestroTabla("otros","tbodyOtros");
+  renderMaestroTabla("esterilizadoras","tbodyEsterilizadoras");
+  renderMaestroTabla("proveedores","tbodyProveedores");
   aplicarFiltroMaestros();
 }
 function geoStatusHtml(m){
@@ -1229,14 +1276,15 @@ function buscarDireccionDuplicada(direccionNueva, excluirCat, excluirId){
     { cat:"biotrom", id: DATA.biotrom.id, nombre: DATA.biotrom.nombre, ubicacion: DATA.biotrom.ubicacion },
     ...DATA.maestros.salud.map(m=>({cat:"salud", id:m.id, nombre:m.nombre, ubicacion:m.ubicacion})),
     ...DATA.maestros.encomiendas.map(m=>({cat:"encomiendas", id:m.id, nombre:m.nombre, ubicacion:m.ubicacion})),
-    ...DATA.maestros.otros.map(m=>({cat:"otros", id:m.id, nombre:m.nombre, ubicacion:m.ubicacion}))
+    ...DATA.maestros.esterilizadoras.map(m=>({cat:"esterilizadoras", id:m.id, nombre:m.nombre, ubicacion:m.ubicacion})),
+    ...DATA.maestros.proveedores.map(m=>({cat:"proveedores", id:m.id, nombre:m.nombre, ubicacion:m.ubicacion}))
   ];
   return candidatos.find(c => !(c.cat===excluirCat && c.id===excluirId) && normalizarDireccion(c.ubicacion) === dirNorm) || null;
 }
 function aplicarFiltroMaestros(){
   const input = document.getElementById("maestrosSearch");
   const q = input ? input.value.trim().toUpperCase() : "";
-  ["salud","encomiendas","otros"].forEach(cat=>{
+  ["salud","encomiendas","esterilizadoras","proveedores"].forEach(cat=>{
     (DATA.maestros[cat]||[]).forEach(m=>{
       const tr = document.querySelector(`#maestros tr[data-cat="${cat}"][data-id="${m.id}"]`);
       if(!tr) return;
@@ -1308,7 +1356,7 @@ document.getElementById("maestros").addEventListener("click", e=>{
 
 /* ============================================================
    PICKER DE PUNTO DE PARTIDA / LLEGADA
-   Nivel 1: Biotrom / Centros de Salud / Encomiendas / Servicios Varios / Otro (escribir)
+   Nivel 1: Biotrom / Centros de Salud / Encomiendas / Esterilizadoras / Proveedores y Clientes / Otro (escribir)
    Nivel 2 (categoría): buscador + lista alfabética de ese maestro
    Nivel 3 (Otro): campo de texto libre
 ============================================================ */
@@ -1340,7 +1388,8 @@ function renderPickerPanel(mv, cual){
         <div class="picker-item" data-action="pick-biotrom">Biotrom</div>
         <div class="picker-item" data-action="pick-cat" data-cat="salud">Centros de Salud</div>
         <div class="picker-item" data-action="pick-cat" data-cat="encomiendas">Encomiendas</div>
-        <div class="picker-item" data-action="pick-cat" data-cat="otros">Servicios Varios</div>
+        <div class="picker-item" data-action="pick-cat" data-cat="esterilizadoras">Esterilizadoras</div>
+        <div class="picker-item" data-action="pick-cat" data-cat="proveedores">Proveedores y Clientes</div>
         <div class="picker-item picker-item-libre" data-action="pick-libre">Otro (escribir)</div>
       </div>
     `;
@@ -1537,7 +1586,7 @@ function renderDiaGroup(dia){
     </div>
     <div class="dia-body">
       <div class="table-scroll">
-        <table>
+        <table class="mobile-cards">
           <thead>
             <tr>
               <th style="width:26px;">#</th>
@@ -1579,25 +1628,25 @@ function ordenarPorHoraInicio(movimientos){
 function renderMovRow(dia, mv, idx){
   return `
   <tr data-mv-id="${mv.id}">
-    <td class="rownum">${idx+1}</td>
-    <td><input type="time" data-field="horaIni" value="${mv.horaIni||""}"></td>
-    <td><input type="time" data-field="horaFin" value="${mv.horaFin||""}"></td>
-    <td>${renderPuntoPicker(mv, "partida")}</td>
-    <td>${renderPuntoPicker(mv, "llegada")}</td>
-    <td>
+    <td class="rownum" data-label="#">${idx+1}</td>
+    <td data-label="Hora Inicio"><input type="time" data-field="horaIni" value="${mv.horaIni||""}"></td>
+    <td data-label="Hora Fin"><input type="time" data-field="horaFin" value="${mv.horaFin||""}"></td>
+    <td data-label="Punto de Partida">${renderPuntoPicker(mv, "partida")}</td>
+    <td data-label="Punto de Llegada">${renderPuntoPicker(mv, "llegada")}</td>
+    <td data-label="Km">
       <div style="display:flex; align-items:center; gap:3px;">
         <input type="text" data-field="km" value="${mv.km!=null?mv.km:""}" placeholder="0.0" style="text-align:right; min-width:46px; flex:1 1 46px;" inputmode="decimal">
         <button class="btn-light no-print" data-action="recalc-km" title="Recalcular distancia entre puntos" style="height:24px; padding:0 5px; font-size:11px; flex-shrink:0;">↻</button>
         <span class="km-status no-print" style="color:var(--warn-text); font-size:12px; cursor:default; flex-shrink:0;"></span>
       </div>
     </td>
-    <td>
+    <td data-label="Gastos Extra">
       <div class="gastos-cell">
         ${(mv.gastos||[]).map(g=>renderGastoChip(mv.id, g)).join("")}
         <button class="btn-add-row no-print" data-action="add-gasto" style="width:26px; height:26px; padding:0; font-size:14px;">+</button>
       </div>
     </td>
-    <td class="no-print" style="text-align:center;"><button class="btn-del-row" data-action="del-mov">×</button></td>
+    <td class="no-print" data-label="Eliminar" style="text-align:center;"><button class="btn-del-row" data-action="del-mov">×</button></td>
   </tr>`;
 }
 
