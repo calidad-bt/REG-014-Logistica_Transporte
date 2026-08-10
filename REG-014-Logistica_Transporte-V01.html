@@ -367,6 +367,10 @@ input.search-input:focus{outline:none; border-color:var(--accent); background:#f
 
 /* ---------- RESPONSIVE / MOBILE ---------- */
 @media (max-width: 720px){
+  /* iOS Safari recorta los elementos position:fixed que están adentro de un
+     ancestro con overflow:hidden. .card y .dia-group lo usan solo para
+     redondear esquinas -> en mobile lo sacamos para no romper el picker. */
+  .card, .dia-group{overflow:visible;}
   .layout{padding:calc(var(--nav-h) + 14px) 10px 30px;}
   .nav-brand{font-size:9px; padding-right:8px;}
   .nav-links{
