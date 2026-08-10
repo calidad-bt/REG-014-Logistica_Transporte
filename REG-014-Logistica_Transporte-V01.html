@@ -1550,7 +1550,7 @@ function refocusPickerInput(){
   posicionarPickerPanel(p);
   const input = p.querySelector(".picker-search, .picker-libre-input");
   if(input){
-    input.focus();
+    input.focus({ preventScroll: true });
     const v = input.value;
     input.setSelectionRange(v.length, v.length);
   }
@@ -2579,6 +2579,7 @@ document.addEventListener("click", e=>{
   }
 });
 document.addEventListener("scroll", e=>{
+  if(window.innerWidth <= 720) return; // en mobile el panel queda anclado abajo, no depende del scroll
   if(pickerUI.openKey && !(e.target.closest && e.target.closest(".picker-panel"))){
     pickerUI.openKey = null;
     renderDias();
