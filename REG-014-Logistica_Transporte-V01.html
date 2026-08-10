@@ -204,6 +204,12 @@ textarea.cta{resize:none; overflow:hidden; min-height:36px; font-family:var(--fo
 .gasto-chip input[type=text][data-field="monto"]{width:100px; font-size:12px; padding:3px 5px; text-align:right; font-family:var(--mono);}
 .gasto-chip input[type=text][data-field="detalle"]{width:120px; font-size:11px; padding:3px 5px;}
 .gasto-chip .thumb{width:24px; height:24px; object-fit:cover; border-radius:2px; border:1px solid var(--border); cursor:pointer;}
+.thumb-wrap{position:relative; display:inline-flex; flex-shrink:0;}
+.thumb-del{
+  position:absolute; top:-6px; right:-6px; width:14px; height:14px; padding:0;
+  border-radius:50%; border:1px solid var(--err-bd); background:var(--err-bg); color:var(--err-text);
+  font-size:10px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;
+}
 .gasto-chip label.filebtn{
   width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center;
   border:1px solid var(--border); border-radius:2px; background:#fff; cursor:pointer; color:var(--text-2); flex-shrink:0;
@@ -1384,7 +1390,7 @@ document.getElementById("maestros").addEventListener("click", e=>{
    Nivel 2 (categoría): buscador + lista alfabética de ese maestro
    Nivel 3 (Otro): campo de texto libre
 ============================================================ */
-let pickerUI = { openKey: null, vista: "root", busqueda: "" };
+let pickerUI = { openKey: null, vista: "root", busqueda: "", focoManual: false };
 function pickerKey(mvId, cual){ return mvId + "_" + cual; }
 
 function renderPuntoPicker(mv, cual){
@@ -1548,6 +1554,7 @@ function refocusPickerInput(){
   const p = diasContainer.querySelector(`.punto-picker[data-mv-id="${mvId}"][data-cual="${cual}"]`);
   if(!p) return;
   posicionarPickerPanel(p);
+  if(!pickerUI.focoManual) return;
   const input = p.querySelector(".picker-search, .picker-libre-input");
   if(input){
     input.focus({ preventScroll: true });
@@ -1675,7 +1682,12 @@ function renderMovRow(dia, mv, idx){
 }
 
 function renderGastoChip(mvId, g){
-  const thumb = g.foto ? `<img src="${g.foto}" class="thumb no-print thumb-view" title="Ver imagen">` : "";
+  const thumb = g.foto
+    ? `<span class="thumb-wrap no-print">
+         <img src="${g.foto}" class="thumb thumb-view" title="Ver imagen">
+         <button type="button" class="thumb-del" data-action="del-foto" title="Quitar foto">×</button>
+       </span>`
+    : "";
   const detalleField = g.tipo === "Otro"
     ? `<input type="text" data-field="detalle" value="${escAttr(g.detalle||"")}" placeholder="Especificar qué gasto...">`
     : "";
@@ -1738,6 +1750,7 @@ diasContainer.addEventListener("click", e=>{
     pickerUI.openKey = (pickerUI.openKey === key) ? null : key;
     pickerUI.vista = "root";
     pickerUI.busqueda = "";
+    pickerUI.focoManual = false;
     renderDias();
     return;
   }
@@ -1758,6 +1771,7 @@ diasContainer.addEventListener("click", e=>{
   if(action === "pick-cat" && cual){
     pickerUI.vista = e.target.getAttribute("data-cat");
     pickerUI.busqueda = "";
+    pickerUI.focoManual = false;
     renderDias();
     return;
   }
@@ -1778,12 +1792,14 @@ diasContainer.addEventListener("click", e=>{
   }
   if(action === "pick-libre" && cual){
     pickerUI.vista = "libre";
+    pickerUI.focoManual = false;
     renderDias();
     return;
   }
   if(action === "picker-back"){
     pickerUI.vista = "root";
     pickerUI.busqueda = "";
+    pickerUI.focoManual = false;
     renderDias();
     return;
   }
@@ -1820,6 +1836,11 @@ diasContainer.addEventListener("click", e=>{
   const gasto = gastoEl && mv ? (mv.gastos||[]).find(g=>g.id===gastoEl.getAttribute("data-gasto-id")) : null;
   if(action === "del-gasto" && mv && gasto){
     mv.gastos = mv.gastos.filter(g=>g.id!==gasto.id);
+    renderDias(); persistir(); return;
+  }
+  if(action === "del-foto" && gasto){
+    if(!confirm("¿Quitar la foto adjunta a este gasto?")) return;
+    gasto.foto = "";
     renderDias(); persistir(); return;
   }
   if(e.target.classList.contains("thumb-view") && gasto && gasto.foto){
@@ -1868,6 +1889,9 @@ diasContainer.addEventListener("input", e=>{
 
 /* Formateo de monto ($ . miles , centavos) al enfocar/desenfocar */
 diasContainer.addEventListener("focusin", e=>{
+  if(e.target.classList && (e.target.classList.contains("picker-search") || e.target.classList.contains("picker-libre-input"))){
+    pickerUI.focoManual = true;
+  }
   if(e.target.getAttribute && e.target.getAttribute("data-field") === "monto"){
     const gastoEl = e.target.closest(".gasto-chip");
     const mvEl = e.target.closest("tr[data-mv-id]");
