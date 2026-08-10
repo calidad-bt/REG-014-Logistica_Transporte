@@ -2574,8 +2574,8 @@ document.addEventListener("click", e=>{
     renderDias();
   }
 });
-document.addEventListener("scroll", ()=>{
-  if(pickerUI.openKey){
+document.addEventListener("scroll", e=>{
+  if(pickerUI.openKey && !(e.target.closest && e.target.closest(".picker-panel"))){
     pickerUI.openKey = null;
     renderDias();
   }
