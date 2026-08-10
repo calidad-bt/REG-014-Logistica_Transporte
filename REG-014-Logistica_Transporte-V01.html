@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -392,6 +391,7 @@ input.search-input:focus{outline:none; border-color:var(--accent); background:#f
   .card-body{padding:12px 10px 14px;}
 
   /* Tabla de movimientos -> tarjetas apiladas en vez de tabla angosta */
+  .mov-table-scroll{overflow-x:visible;}
   table.mobile-cards{min-width:0; table-layout:auto; width:100%;}
   table.mobile-cards thead{display:none;}
   table.mobile-cards, table.mobile-cards tbody{display:block; width:100%;}
@@ -413,6 +413,9 @@ input.search-input:focus{outline:none; border-color:var(--accent); background:#f
     letter-spacing:.05em; color:var(--text-2); margin-bottom:4px;
   }
   table.mobile-cards td[data-label="#"]{display:none;}
+  table.mobile-cards .gastos-cell{min-width:0; width:100%;}
+  table.mobile-cards .km-row{flex-wrap:wrap;}
+  table.mobile-cards .km-row input{min-width:0; flex:1 1 60px;}
   table.mobile-cards td[data-label="Eliminar"]{padding:10px;}
   table.mobile-cards td[data-label="Eliminar"] .btn-del-row{width:100%; height:32px; font-size:15px;}
   table.mobile-cards .empty-hint{display:block; padding:14px;}
@@ -1586,7 +1589,7 @@ function renderDiaGroup(dia){
       </div>
     </div>
     <div class="dia-body">
-      <div class="table-scroll">
+      <div class="table-scroll mov-table-scroll">
         <table class="mobile-cards">
           <thead>
             <tr>
@@ -1635,7 +1638,7 @@ function renderMovRow(dia, mv, idx){
     <td data-label="Punto de Partida">${renderPuntoPicker(mv, "partida")}</td>
     <td data-label="Punto de Llegada">${renderPuntoPicker(mv, "llegada")}</td>
     <td data-label="Km">
-      <div style="display:flex; align-items:center; gap:3px;">
+      <div class="km-row" style="display:flex; align-items:center; gap:3px;">
         <input type="text" data-field="km" value="${mv.km!=null?mv.km:""}" placeholder="0.0" style="text-align:right; min-width:46px; flex:1 1 46px;" inputmode="decimal">
         <button class="btn-light no-print" data-action="recalc-km" title="Recalcular distancia entre puntos" style="height:24px; padding:0 5px; font-size:11px; flex-shrink:0;">↻</button>
         <span class="km-status no-print" style="color:var(--warn-text); font-size:12px; cursor:default; flex-shrink:0;"></span>
