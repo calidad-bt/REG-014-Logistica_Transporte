@@ -425,6 +425,11 @@ input.search-input:focus{outline:none; border-color:var(--accent); background:#f
     max-height:65vh;
   }
   .picker-list{max-height:45vh;}
+  .picker-search, .picker-libre-input{font-size:16px;}
+  .punto-picker-btn{font-size:16px;}
+  /* Evitar el zoom automático de iOS/Android al enfocar cualquier campo
+     con letra menor a 16px en toda la app, no solo en el picker. */
+  input, select, textarea{font-size:16px;}
   table.mobile-cards td[data-label="Eliminar"]{padding:10px;}
   table.mobile-cards td[data-label="Eliminar"] .btn-del-row{width:100%; height:32px; font-size:15px;}
   table.mobile-cards .empty-hint{display:block; padding:14px;}
