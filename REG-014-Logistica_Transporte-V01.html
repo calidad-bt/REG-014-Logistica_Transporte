@@ -248,6 +248,9 @@ textarea.cta{resize:none; overflow:hidden; min-height:36px; font-family:var(--fo
 
 .empty-hint{color:var(--text-3); font-size:12px; padding:14px; text-align:center;}
 
+.carga-badge{display:inline-flex; align-items:center; justify-content:center; margin-left:5px; color:var(--text-3); cursor:default; vertical-align:middle;}
+.carga-badge:hover{color:var(--accent);}
+
 /* ---------- PUNTO PICKER (Partida / Llegada) ---------- */
 .punto-picker-btn{
   width:100%; text-align:left; height:34px; padding:5px 9px; border:1px solid var(--border);
@@ -882,6 +885,31 @@ let DATA = {
 
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 
+/* ============================================================
+   AUDITORÍA: "quién cargó / editó" cada registro
+   Solo visible para usuarios con permiso de administración.
+   prefix permite trackear más de un campo dentro del mismo objeto
+   (ej: pago de Gastos Recorridos vs. pago de Gastos Extras, que
+   conviven en el mismo registro de semana).
+============================================================ */
+const ICON_USER = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="1.8"/><path d="M5 19c0-3.3 3.1-6 7-6s7 2.7 7 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+function marcarCarga(obj, prefix){
+  if(!obj) return;
+  prefix = prefix || "";
+  obj["_cargadoPor"+prefix] = currentUser;
+  obj["_cargadoTs"+prefix] = Date.now();
+}
+function badgeCarga(obj, prefix, etiqueta){
+  if(!permisosActuales().administracion) return "";
+  prefix = prefix || "";
+  const por = obj && obj["_cargadoPor"+prefix];
+  if(!por) return "";
+  const ts = obj["_cargadoTs"+prefix];
+  const fecha = ts ? new Date(ts).toLocaleString("es-AR", { day:"2-digit", month:"2-digit", year:"2-digit", hour:"2-digit", minute:"2-digit" }) : "";
+  const txt = (etiqueta ? etiqueta + " — " : "") + "Cargado por: " + por + (fecha ? " · " + fecha : "");
+  return `<span class="carga-badge no-print" title="${escAttr(txt)}">${ICON_USER}</span>`;
+}
+
 function normalizeDiasArray(arr){
   arr = Array.isArray(arr) ? arr : [];
   arr.forEach((dia,idx)=>{
@@ -1246,7 +1274,7 @@ function mensajeErrorCoords(c, nombre){
   const det = c.detalle ? ` (detalle técnico: ${c.detalle})` : "";
   return `No se pudo consultar la dirección de "${nombre}" (sin conexión o servicio no disponible)${det}.`;
 }
-async function autoCalcularKm(mv){
+async function autoCalcularKm(mv, dia){
   const p = objetoPunto(mv, "partida");
   const l = objetoPunto(mv, "llegada");
   if(!p || !l) return;
@@ -1349,6 +1377,7 @@ function renderBiotromRow(){
         <div style="display:flex; align-items:center; gap:4px;">
           <input type="text" value="${escAttr(m.ubicacion)}" data-field="ubicacion" placeholder="Dirección" style="flex:1;" ${ro}>
           <span class="geo-status no-print" title="${escAttr(gs.title)}" style="font-size:13px; width:16px; text-align:center; flex-shrink:0; cursor:default; color:${gs.color};">${gs.texto}</span>
+          ${badgeCarga(m)}
         </div>
       </td>
     </tr>
@@ -1373,6 +1402,7 @@ function renderMaestroTabla(cat, tbodyId){
         <div style="display:flex; align-items:center; gap:4px;">
           <input type="text" value="${escAttr(m.ubicacion)}" data-field="ubicacion" placeholder="Dirección" style="flex:1;" ${ro}>
           <span class="geo-status no-print" title="${escAttr(gs.title)}" style="font-size:13px; width:16px; text-align:center; flex-shrink:0; cursor:default; color:${gs.color};">${gs.texto}</span>
+          ${badgeCarga(m)}
         </div>
       </td>
       <td class="no-print" style="text-align:center;">${editable ? '<button class="btn-del-row" data-action="del-maestro">×</button>' : ''}</td>
@@ -1414,7 +1444,9 @@ document.querySelectorAll(".btn-add-row[data-cat]").forEach(btn=>{
   btn.addEventListener("click", ()=>{
     if(!maestrosEditable()) return;
     const cat = btn.getAttribute("data-cat");
-    DATA.maestros[cat].push({ id: uid(), nombre:"", ubicacion:"" });
+    const nuevo = { id: uid(), nombre:"", ubicacion:"" };
+    marcarCarga(nuevo);
+    DATA.maestros[cat].push(nuevo);
     renderMaestros();
     persistir();
   });
@@ -1439,11 +1471,11 @@ document.getElementById("maestros").addEventListener("input", e=>{
 document.getElementById("maestros").addEventListener("change", e=>{
   if(!maestrosEditable()) return;
   const field = e.target.getAttribute && e.target.getAttribute("data-field");
+  const tr = e.target.closest("tr[data-id]");
+  const cat = tr ? tr.getAttribute("data-cat") : null;
+  const id = tr ? tr.getAttribute("data-id") : null;
+  const item = cat === "biotrom" ? DATA.biotrom : (cat && DATA.maestros[cat].find(m=>m.id===id));
   if(field === "ubicacion"){
-    const tr = e.target.closest("tr[data-id]");
-    const cat = tr.getAttribute("data-cat");
-    const id = tr.getAttribute("data-id");
-    const item = cat === "biotrom" ? DATA.biotrom : DATA.maestros[cat].find(m=>m.id===id);
     const dup = buscarDireccionDuplicada(e.target.value, cat, id);
     if(item && dup){
       alert(`Esta dirección ya está registrada en "${dup.nombre || "(sin nombre)"}". No se puede repetir la misma dirección en dos maestros.`);
@@ -1452,10 +1484,12 @@ document.getElementById("maestros").addEventListener("change", e=>{
       renderMaestros();
       return;
     }
+    if(item) marcarCarga(item);
     persistir(); renderDias();
     if(tr) verificarUbicacionMaestro(cat, id);
     return;
   }
+  if(item) marcarCarga(item);
   persistir(); renderDias();
 });
 document.getElementById("maestros").addEventListener("click", e=>{
@@ -1679,6 +1713,7 @@ function renderDiaGroup(dia){
           <button class="cal-btn no-print" title="Elegir fecha">▦
             <input type="date" data-field="fecha-native">
           </button>
+          ${badgeCarga(dia)}
         </div>
       </div>
       <div class="dia-field">
@@ -1800,9 +1835,11 @@ document.getElementById("btnNuevoDia").addEventListener("click", ()=>{
   const dd = String(hoy.getDate()).padStart(2,"0");
   const mm = String(hoy.getMonth()+1).padStart(2,"0");
   const aa = String(hoy.getFullYear()).slice(-2);
-  DATA.movs[movPersonaActual].dias.push({
+  const nuevoDia = {
     id: uid(), fecha: dd+"/"+mm+"/"+aa, usarManual: false, horasExtraManual: "", obs: "", creadoTs: Date.now(), movimientos: []
-  });
+  };
+  marcarCarga(nuevoDia);
+  DATA.movs[movPersonaActual].dias.push(nuevoDia);
   renderDias();
   persistir();
 });
@@ -1824,6 +1861,7 @@ diasContainer.addEventListener("click", e=>{
   }
   if(action === "add-mov"){
     dia.movimientos.push({ id: uid(), horaIni:"", horaFin:"", partidaId:"", llegadaId:"", partidaLibre:"", llegadaLibre:"", km:"", gastos:[] });
+    marcarCarga(dia);
     renderDias(); persistir(); return;
   }
   const mvEl = e.target.closest("tr[data-mv-id]");
@@ -1853,7 +1891,8 @@ diasContainer.addEventListener("click", e=>{
     mv[cual+"Id"] = DATA.biotrom.id;
     mv[cual+"Libre"] = "";
     pickerUI.openKey = null;
-    if(tienePunto(mv)) autoCalcularKm(mv); else { renderDias(); persistir(); }
+    marcarCarga(dia);
+    if(tienePunto(mv)) autoCalcularKm(mv, dia); else { renderDias(); persistir(); }
     return;
   }
   if(action === "pick-cat" && cual){
@@ -1875,7 +1914,8 @@ diasContainer.addEventListener("click", e=>{
     mv[cual+"Id"] = idElegido;
     mv[cual+"Libre"] = "";
     pickerUI.openKey = null;
-    if(tienePunto(mv)) autoCalcularKm(mv); else { renderDias(); persistir(); }
+    marcarCarga(dia);
+    if(tienePunto(mv)) autoCalcularKm(mv, dia); else { renderDias(); persistir(); }
     return;
   }
   if(action === "pick-libre" && cual){
@@ -1902,33 +1942,39 @@ diasContainer.addEventListener("click", e=>{
     mv[cual+"Libre"] = texto;
     mv[cual+"Id"] = "";
     pickerUI.openKey = null;
-    if(tienePunto(mv)) autoCalcularKm(mv); else { renderDias(); persistir(); }
+    marcarCarga(dia);
+    if(tienePunto(mv)) autoCalcularKm(mv, dia); else { renderDias(); persistir(); }
     return;
   }
 
   if(action === "del-mov" && mv){
     if(!confirm("¿Eliminar este movimiento?")) return;
     dia.movimientos = dia.movimientos.filter(m=>m.id!==mv.id);
+    marcarCarga(dia);
     renderDias(); persistir(); return;
   }
   if(action === "recalc-km" && mv){
-    autoCalcularKm(mv);
+    marcarCarga(dia);
+    autoCalcularKm(mv, dia);
     return;
   }
   if(action === "add-gasto" && mv){
     mv.gastos = mv.gastos || [];
     mv.gastos.push({ id: uid(), tipo: GASTO_TIPOS[0], monto: "", foto: "" });
+    marcarCarga(dia);
     renderDias(); persistir(); return;
   }
   const gastoEl = e.target.closest(".gasto-chip");
   const gasto = gastoEl && mv ? (mv.gastos||[]).find(g=>g.id===gastoEl.getAttribute("data-gasto-id")) : null;
   if(action === "del-gasto" && mv && gasto){
     mv.gastos = mv.gastos.filter(g=>g.id!==gasto.id);
+    marcarCarga(dia);
     renderDias(); persistir(); return;
   }
   if(action === "del-foto" && gasto){
     if(!confirm("¿Quitar la foto adjunta a este gasto?")) return;
     gasto.foto = "";
+    marcarCarga(dia);
     renderDias(); persistir(); return;
   }
   if(e.target.classList.contains("thumb-view") && gasto && gasto.foto){
@@ -2016,6 +2062,7 @@ diasContainer.addEventListener("focusout", e=>{
       const n = parseMonto(e.target.value);
       gasto.monto = n;
       e.target.value = n === 0 ? "" : formatMonto(n);
+      marcarCarga(dia);
       renderKPIs();
       const totBadges = diaEl.querySelectorAll(".tot-badge");
       const tot = computeDiaTotals(dia);
@@ -2035,6 +2082,7 @@ diasContainer.addEventListener("change", e=>{
   if(field === "fecha-native" && e.target.value){
     const [y,m,d] = e.target.value.split("-");
     dia.fecha = d+"/"+m+"/"+y.slice(-2);
+    marcarCarga(dia);
     renderDias(); persistir(); return;
   }
   if(field === "usarManual"){
@@ -2043,6 +2091,7 @@ diasContainer.addEventListener("change", e=>{
       const t = computeDiaTotals(dia);
       dia.horasExtraManual = (Math.round(t.heAuto*100)/100).toFixed(2);
     }
+    marcarCarga(dia);
     renderDias(); persistir(); return;
   }
 
@@ -2055,6 +2104,7 @@ diasContainer.addEventListener("change", e=>{
     const reader = new FileReader();
     reader.onload = ()=>{
       gasto.foto = reader.result;
+      marcarCarga(dia);
       renderDias(); persistir();
     };
     reader.readAsDataURL(e.target.files[0]);
@@ -2064,13 +2114,30 @@ diasContainer.addEventListener("change", e=>{
     const ini = timeToMin(mv.horaIni), fin = timeToMin(mv.horaFin);
     if(ini != null && fin != null && fin < ini){
       alert("La hora de fin no puede ser anterior a la hora de inicio.");
-      if(field === "horaFin") mv.horaFin = ""; else mv.horaIni = "";
+      mv[field] = "";
+      e.target.value = "";
     }
+    marcarCarga(dia);
+    actualizarHorasExtraDia(dia, diaEl);
+    persistir();
+    return;
   }
   if(field === "monto") return; /* manejado por focusout */
+  marcarCarga(dia);
   renderDias();
   persistir();
 });
+
+/* Actualiza en el DOM solo el indicador de Horas Extra de un día, sin reconstruir
+   todo el día (evita romper el selector nativo de hora en horaIni/horaFin: si se
+   hace un renderDias() completo mientras el navegador tiene abierto el picker de
+   hora, el input se destruye y hay que volver a tocarlo para poder elegir). */
+function actualizarHorasExtraDia(dia, diaEl){
+  if(dia.usarManual) return; // en modo manual el valor no se recalcula automáticamente
+  const tot = computeDiaTotals(dia);
+  const heInput = diaEl.querySelector(".he-input");
+  if(heInput) heInput.value = (Math.round(tot.heAuto*100)/100).toFixed(2);
+}
 
 /* ============================================================
    META (Aprobacion / Vigor)
@@ -2402,7 +2469,7 @@ function obtenerFilasPagos(){
     const valorHsExtra = costoHsExtra * horasExtra;
     return {
       dia, kmTotal: tot.kmTotal, gastoTotal: tot.gastoTotal, horasExtra,
-      costoKm, costoHsExtra, valorKm, valorHsExtra,
+      costoKm, costoHsExtra, valorKm, valorHsExtra, cfgDia,
       weekKey: isoWeekKey(parseFechaDDMMAA(dia.fecha))
     };
   });
@@ -2427,6 +2494,7 @@ function calcularSemanasPagos(filas, debeFn, pagoField){
     const s = semanas[wk];
     const semanaData = DATA.pagos[pagosPersonaActual].semanas[wk] || {};
     s.pago = semanaData[pagoField] != null ? Number(semanaData[pagoField]) : 0;
+    s.semanaObj = semanaData;
     s.saldo = saldoAnterior + s.debeAcumulado - s.pago;
     saldoAnterior = s.saldo;
   });
@@ -2450,7 +2518,7 @@ function renderPagosRecorridos(){
     const debeTxt = esUltimoDia ? formatARS(s.debeAcumulado) : "-";
     const saldoTxt = esUltimoDia ? formatARS(s.saldo) : "-";
     const pagoCell = esUltimoDia
-      ? `<span class="gasto-amt">$<input type="text" style="width:90px;" data-semana="${f.weekKey}" data-field="pagoKm" value="${s.pago?formatMonto(s.pago):""}" placeholder="0,00" inputmode="decimal"></span>`
+      ? `<span class="gasto-amt">$<input type="text" style="width:90px;" data-semana="${f.weekKey}" data-field="pagoKm" value="${s.pago?formatMonto(s.pago):""}" placeholder="0,00" inputmode="decimal">${badgeCarga(s.semanaObj,"Km","Pago recorridos")}</span>`
       : "-";
     return `
       <tr class="${esUltimoDia?'pagos-week-final':''}" data-dia-id="${f.dia.id}">
@@ -2466,7 +2534,7 @@ function renderPagosRecorridos(){
         <td>
           <div class="pagos-costo-cell">
             <span class="gasto-amt">$<input type="text" data-field="costoHsExtra" value="${f.costoHsExtra?formatMonto(f.costoHsExtra):""}" placeholder="0,00" inputmode="decimal"></span>
-            <span class="pagos-costo-total">${formatARS(f.valorHsExtra)}</span>
+            <span class="pagos-costo-total">${formatARS(f.valorHsExtra)}${badgeCarga(f.cfgDia)}</span>
           </div>
         </td>
         <td><strong>${debeTxt}</strong></td>
@@ -2500,12 +2568,14 @@ document.getElementById("tbodyPagosRecorridos").addEventListener("focusout", e=>
     const diaId = tr.getAttribute("data-dia-id");
     if(!DATA.pagos[pagosPersonaActual].dias[diaId]) DATA.pagos[pagosPersonaActual].dias[diaId] = {};
     DATA.pagos[pagosPersonaActual].dias[diaId][field] = parseMonto(e.target.value);
+    marcarCarga(DATA.pagos[pagosPersonaActual].dias[diaId]);
     renderPagosRecorridos();
     persistir();
   } else if(field === "pagoKm"){
     const wk = e.target.getAttribute("data-semana");
     if(!DATA.pagos[pagosPersonaActual].semanas[wk]) DATA.pagos[pagosPersonaActual].semanas[wk] = {};
     DATA.pagos[pagosPersonaActual].semanas[wk].pagoKm = parseMonto(e.target.value);
+    marcarCarga(DATA.pagos[pagosPersonaActual].semanas[wk], "Km");
     renderPagosRecorridos();
     persistir();
   }
@@ -2528,7 +2598,7 @@ function renderPagosExtras(){
     const debeTxt = esUltimoDia ? formatARS(s.debeAcumulado) : "-";
     const saldoTxt = esUltimoDia ? formatARS(s.saldo) : "-";
     const pagoCell = esUltimoDia
-      ? `<span class="gasto-amt">$<input type="text" style="width:90px;" data-semana="${f.weekKey}" data-field="pagoExtra" value="${s.pago?formatMonto(s.pago):""}" placeholder="0,00" inputmode="decimal"></span>`
+      ? `<span class="gasto-amt">$<input type="text" style="width:90px;" data-semana="${f.weekKey}" data-field="pagoExtra" value="${s.pago?formatMonto(s.pago):""}" placeholder="0,00" inputmode="decimal">${badgeCarga(s.semanaObj,"Extra","Pago extras")}</span>`
       : "-";
     return `
       <tr class="${esUltimoDia?'pagos-week-final':''}" data-dia-id="${f.dia.id}">
@@ -2564,6 +2634,7 @@ document.getElementById("tbodyPagosExtras").addEventListener("focusout", e=>{
     const wk = e.target.getAttribute("data-semana");
     if(!DATA.pagos[pagosPersonaActual].semanas[wk]) DATA.pagos[pagosPersonaActual].semanas[wk] = {};
     DATA.pagos[pagosPersonaActual].semanas[wk].pagoExtra = parseMonto(e.target.value);
+    marcarCarga(DATA.pagos[pagosPersonaActual].semanas[wk], "Extra");
     renderPagosExtras();
     persistir();
   }
