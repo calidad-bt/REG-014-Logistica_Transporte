@@ -190,6 +190,9 @@ select{
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='6'%3E%3Cpath d='M0 0l4.5 6L9 0z' fill='%235A6470'/%3E%3C/svg%3E");
   background-repeat:no-repeat; background-position:right 6px center; padding-right:22px;
 }
+.time-select-wrap{display:flex; align-items:center; gap:2px;}
+.time-select{font-family:var(--mono); font-weight:600; font-size:12px; width:52px; padding-left:6px; border:1px solid var(--border); background-color:#fff;}
+.time-sep{font-family:var(--mono); font-weight:700; color:var(--text-3); font-size:12px;}
 textarea.cta{resize:none; overflow:hidden; min-height:36px; font-family:var(--font);}
 
 /* ---------- BADGES / CHIPS ---------- */
@@ -1593,6 +1596,24 @@ function renderKPIs(){
 /* ============================================================
    RENDER: DIAS / MOVIMIENTOS
 ============================================================ */
+/* Genera el par de <select> hora/minuto para Hora Inicio / Hora Fin. Se usan selects
+   nativos (no <input type="time">) porque el selector nativo de hora, en varios
+   celulares, precarga la hora actual apenas se toca el campo vacío y confirma ese
+   valor si no se llega a girar la rueda a tiempo. Con selects comunes no hay ningún
+   valor por defecto: quedan vacíos hasta que el usuario elige hora y minuto. */
+function renderTimeSelect(base, valor){
+  const [h, m] = (valor||"").split(":");
+  let optH = '<option value="">hh</option>';
+  for(let i=0;i<24;i++){ const v = String(i).padStart(2,"0"); optH += `<option value="${v}" ${v===h?"selected":""}>${v}</option>`; }
+  let optM = '<option value="">mm</option>';
+  for(let i=0;i<60;i++){ const v = String(i).padStart(2,"0"); optM += `<option value="${v}" ${v===m?"selected":""}>${v}</option>`; }
+  return `<div class="time-select-wrap">
+    <select class="time-select" data-field="${base}H">${optH}</select>
+    <span class="time-sep">:</span>
+    <select class="time-select" data-field="${base}M">${optM}</select>
+  </div>`;
+}
+
 function computeDiaTotals(dia){
   let kmTotal = 0, gastoTotal = 0;
   let minIni = null, maxFin = null;
@@ -1744,8 +1765,8 @@ function renderDiaGroup(dia){
           <thead>
             <tr>
               <th style="width:26px;">#</th>
-              <th style="width:90px;">Hora Inicio</th>
-              <th style="width:90px;">Hora Fin</th>
+              <th style="width:118px;">Hora Inicio</th>
+              <th style="width:118px;">Hora Fin</th>
               <th>Punto de Partida</th>
               <th>Punto de Llegada</th>
               <th style="width:110px;" title="Se calcula solo si Partida y Llegada tienen dirección cargada en Maestros">Km</th>
@@ -1783,8 +1804,8 @@ function renderMovRow(dia, mv, idx){
   return `
   <tr data-mv-id="${mv.id}">
     <td class="rownum" data-label="#">${idx+1}</td>
-    <td data-label="Hora Inicio"><input type="time" data-field="horaIni" value="${mv.horaIni||""}"></td>
-    <td data-label="Hora Fin"><input type="time" data-field="horaFin" value="${mv.horaFin||""}"></td>
+    <td data-label="Hora Inicio">${renderTimeSelect("horaIni", mv.horaIni)}</td>
+    <td data-label="Hora Fin">${renderTimeSelect("horaFin", mv.horaFin)}</td>
     <td data-label="Punto de Partida">${renderPuntoPicker(mv, "partida")}</td>
     <td data-label="Punto de Llegada">${renderPuntoPicker(mv, "llegada")}</td>
     <td data-label="Km">
@@ -2011,9 +2032,7 @@ diasContainer.addEventListener("input", e=>{
   const mvEl = e.target.closest("tr[data-mv-id]");
   const mv = mvEl ? dia.movimientos.find(m=>m.id===mvEl.getAttribute("data-mv-id")) : null;
   if(mv){
-    if(field === "horaIni"){ mv.horaIni = e.target.value; }
-    else if(field === "horaFin"){ mv.horaFin = e.target.value; }
-    else if(field === "km"){ mv.km = e.target.value; }
+    if(field === "km"){ mv.km = e.target.value; }
     const gastoEl = e.target.closest(".gasto-chip");
     const gasto = gastoEl ? (mv.gastos||[]).find(g=>g.id===gastoEl.getAttribute("data-gasto-id")) : null;
     if(gasto){
@@ -2110,12 +2129,20 @@ diasContainer.addEventListener("change", e=>{
     reader.readAsDataURL(e.target.files[0]);
     return;
   }
-  if(mv && (field === "horaIni" || field === "horaFin")){
+  if(mv && (field === "horaIniH" || field === "horaIniM" || field === "horaFinH" || field === "horaFinM")){
+    const base = field.slice(0, -1); // "horaIni" o "horaFin"
+    const selH = mvEl.querySelector(`select[data-field="${base}H"]`);
+    const selM = mvEl.querySelector(`select[data-field="${base}M"]`);
+    const h = selH ? selH.value : "";
+    const m = selM ? selM.value : "";
+    mv[base] = (h !== "" && m !== "") ? (h+":"+m) : "";
+
     const ini = timeToMin(mv.horaIni), fin = timeToMin(mv.horaFin);
     if(ini != null && fin != null && fin < ini){
       alert("La hora de fin no puede ser anterior a la hora de inicio.");
-      mv[field] = "";
-      e.target.value = "";
+      mv[base] = "";
+      if(selH) selH.value = "";
+      if(selM) selM.value = "";
     }
     marcarCarga(dia);
     actualizarHorasExtraDia(dia, diaEl);
