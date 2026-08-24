@@ -190,6 +190,27 @@ select{
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='6'%3E%3Cpath d='M0 0l4.5 6L9 0z' fill='%235A6470'/%3E%3C/svg%3E");
   background-repeat:no-repeat; background-position:right 6px center; padding-right:22px;
 }
+/* TIPO (Proveedor Fábrica / Proveedor CX / Cliente) — select con color por categoría */
+.tipo-sel{
+  border-radius:10px !important; padding:3px 22px 3px 8px !important;
+  font-size:11px !important; font-weight:700 !important;
+  text-align:center !important; width:100%;
+}
+.tipo-fabrica{
+  background-color:var(--accent-l) !important; color:var(--accent-d) !important; border-color:var(--accent) !important;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='6'%3E%3Cpath d='M0 0l4.5 6L9 0z' fill='%23094E66'/%3E%3C/svg%3E") !important;
+  background-repeat:no-repeat !important; background-position:right 8px center !important; background-size:9px 6px !important;
+}
+.tipo-cx{
+  background-color:var(--warn-bg) !important; color:var(--warn-text) !important; border-color:var(--warn-bd) !important;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='6'%3E%3Cpath d='M0 0l4.5 6L9 0z' fill='%238A5C00'/%3E%3C/svg%3E") !important;
+  background-repeat:no-repeat !important; background-position:right 8px center !important; background-size:9px 6px !important;
+}
+.tipo-cliente{
+  background-color:var(--ok-bg) !important; color:var(--ok-text) !important; border-color:var(--ok-bd) !important;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='6'%3E%3Cpath d='M0 0l4.5 6L9 0z' fill='%231E6B2E'/%3E%3C/svg%3E") !important;
+  background-repeat:no-repeat !important; background-position:right 8px center !important; background-size:9px 6px !important;
+}
 .time-select-wrap{display:flex; align-items:center; gap:2px;}
 .time-select{font-family:var(--mono); font-weight:600; font-size:12px; width:52px; padding-left:6px; border:1px solid var(--border); background-color:#fff;}
 .time-sep{font-family:var(--mono); font-weight:700; color:var(--text-3); font-size:12px;}
@@ -276,6 +297,7 @@ textarea.cta{resize:none; overflow:hidden; min-height:36px; font-family:var(--fo
 .picker-item:hover{background:var(--accent-l); color:var(--accent-d);}
 .picker-item-libre{border-top:1px solid var(--border); margin-top:5px; padding-top:11px; color:var(--accent); font-weight:600;}
 .picker-back{padding:6px 7px; font-size:12px; color:var(--accent); cursor:pointer; font-weight:600; display:block;}
+.picker-tipo-activo{padding:0 7px 6px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text-3);}
 .picker-back:hover{text-decoration:underline;}
 .picker-search, .picker-libre-input{
   width:100%; border:1px solid var(--border); border-radius:3px; padding:5px 7px; font-size:12px;
@@ -328,6 +350,33 @@ input.search-input:focus{outline:none; border-color:var(--accent); background:#f
 .pagos-subtab-btn.active{color:var(--accent); border-bottom-color:var(--accent);}
 .pagos-subpage{display:none;}
 .pagos-subpage.active{display:block;}
+
+/* ---------- SUBHOJAS DE MAESTROS (Centros de Salud / Encomiendas / Esterilizadoras / Proveedores) ---------- */
+.maestro-subtabs{display:flex; gap:20px; margin-bottom:16px; border-bottom:1px solid var(--border); flex-wrap:wrap;}
+.maestro-subtab-btn{
+  height:32px; padding:0 2px; margin-bottom:-1px; border:none; border-bottom:2px solid transparent;
+  background:transparent; color:var(--text-2); font-size:12px; font-weight:600;
+  font-family:var(--font); cursor:pointer; transition:color .1s,border-color .1s;
+}
+.maestro-subtab-btn:hover{color:var(--text);}
+.maestro-subtab-btn.active{color:var(--accent); border-bottom-color:var(--accent);}
+.maestro-subpage{display:none;}
+.maestro-subpage.active{display:block;}
+
+/* ---------- FILTRO POR TIPO (Proveedores y Clientes) ---------- */
+.tipo-filtro-bar{display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-bottom:14px;}
+.tipo-filtro-label{font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--text-3); margin-right:2px;}
+.tipo-filtro-btn{
+  height:26px; padding:0 12px; border-radius:12px; border:1px solid var(--border);
+  background:var(--surface); color:var(--text-2); font-size:11px; font-weight:700;
+  font-family:var(--font); cursor:pointer; transition:filter .1s;
+}
+.tipo-filtro-btn:hover{filter:brightness(.96);}
+.tipo-filtro-btn.active{border-width:1.5px;}
+.tipo-filtro-btn.active[data-tipo-filtro="todos"]{background:var(--accent); border-color:var(--accent); color:#fff;}
+.tipo-filtro-btn.active[data-tipo-filtro="fabrica"]{background:var(--accent-l); border-color:var(--accent); color:var(--accent-d);}
+.tipo-filtro-btn.active[data-tipo-filtro="cx"]{background:var(--warn-bg); border-color:var(--warn-bd); color:var(--warn-text);}
+.tipo-filtro-btn.active[data-tipo-filtro="cliente"]{background:var(--ok-bg); border-color:var(--ok-bd); color:var(--ok-text);}
 
 /* ---------- PANTALLA DE LOGIN ---------- */
 .login-gate{
@@ -637,41 +686,67 @@ tr.drag-over td{background:var(--accent-l); border-top:2px solid var(--accent);}
           <input type="text" class="search-input" id="maestrosSearch" placeholder="Buscar por nombre o ubicación...">
         </div>
 
-        <div class="section-title">Maestro — Centros de Salud</div>
-        <div class="table-scroll" style="margin-bottom:16px;">
-          <table>
-            <thead><tr><th style="width:26px;"></th><th>Nombre</th><th>Ubicación (dirección)</th><th style="width:36px;" class="no-print"></th></tr></thead>
-            <tbody id="tbodySalud"></tbody>
-          </table>
+        <div class="maestro-subtabs no-print" id="maestrosSubTabs">
+          <button class="maestro-subtab-btn" data-sub="salud">Centros de Salud</button>
+          <button class="maestro-subtab-btn" data-sub="encomiendas">Encomiendas</button>
+          <button class="maestro-subtab-btn" data-sub="esterilizadoras">Esterilizadoras</button>
+          <button class="maestro-subtab-btn" data-sub="proveedores">Proveedores y Clientes</button>
         </div>
-        <button class="btn-add-row no-print" data-cat="salud" style="margin-bottom:26px;">+ Agregar Centro de Salud</button>
 
-        <div class="section-title">Maestro — Encomiendas</div>
-        <div class="table-scroll" style="margin-bottom:16px;">
-          <table>
-            <thead><tr><th style="width:26px;"></th><th>Nombre</th><th>Ubicación (dirección)</th><th style="width:36px;" class="no-print"></th></tr></thead>
-            <tbody id="tbodyEncomiendas"></tbody>
-          </table>
+        <div class="maestro-subpage active" id="maestroSubSalud">
+          <div class="section-title">Maestro — Centros de Salud</div>
+          <div class="table-scroll" style="margin-bottom:16px;">
+            <table>
+              <thead><tr><th style="width:26px;"></th><th>Nombre</th><th>Ubicación (dirección)</th><th style="width:36px;" class="no-print"></th></tr></thead>
+              <tbody id="tbodySalud"></tbody>
+            </table>
+          </div>
+          <button class="btn-add-row no-print" data-cat="salud">+ Agregar Centro de Salud</button>
+          <div style="margin-top:8px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;" class="no-print">
+            <button class="btn btn-light" id="btnImportarCentrosSalud" type="button">Importar Centros de Salud (migración Excel)</button>
+            <span style="font-size:11px; color:var(--text-3);">Agrega los centros transcriptos de la migración de Leo que todavía no estén cargados. No duplica los que ya existen.</span>
+          </div>
         </div>
-        <button class="btn-add-row no-print" data-cat="encomiendas" style="margin-bottom:26px;">+ Agregar Encomienda</button>
 
-        <div class="section-title">Maestro — Esterilizadoras</div>
-        <div class="table-scroll" style="margin-bottom:16px;">
-          <table>
-            <thead><tr><th style="width:26px;"></th><th>Nombre</th><th>Ubicación (dirección)</th><th style="width:36px;" class="no-print"></th></tr></thead>
-            <tbody id="tbodyEsterilizadoras"></tbody>
-          </table>
+        <div class="maestro-subpage" id="maestroSubEncomiendas">
+          <div class="section-title">Maestro — Encomiendas</div>
+          <div class="table-scroll" style="margin-bottom:16px;">
+            <table>
+              <thead><tr><th style="width:26px;"></th><th>Nombre</th><th>Ubicación (dirección)</th><th style="width:36px;" class="no-print"></th></tr></thead>
+              <tbody id="tbodyEncomiendas"></tbody>
+            </table>
+          </div>
+          <button class="btn-add-row no-print" data-cat="encomiendas">+ Agregar Encomienda</button>
         </div>
-        <button class="btn-add-row no-print" data-cat="esterilizadoras" style="margin-bottom:26px;">+ Agregar Esterilizadora</button>
 
-        <div class="section-title">Maestro — Proveedores y Clientes</div>
-        <div class="table-scroll" style="margin-bottom:16px;">
-          <table>
-            <thead><tr><th style="width:26px;"></th><th>Nombre</th><th>Ubicación (dirección)</th><th style="width:36px;" class="no-print"></th></tr></thead>
-            <tbody id="tbodyProveedores"></tbody>
-          </table>
+        <div class="maestro-subpage" id="maestroSubEsterilizadoras">
+          <div class="section-title">Maestro — Esterilizadoras</div>
+          <div class="table-scroll" style="margin-bottom:16px;">
+            <table>
+              <thead><tr><th style="width:26px;"></th><th>Nombre</th><th>Ubicación (dirección)</th><th style="width:36px;" class="no-print"></th></tr></thead>
+              <tbody id="tbodyEsterilizadoras"></tbody>
+            </table>
+          </div>
+          <button class="btn-add-row no-print" data-cat="esterilizadoras">+ Agregar Esterilizadora</button>
         </div>
-        <button class="btn-add-row no-print" data-cat="proveedores">+ Agregar Proveedor / Cliente</button>
+
+        <div class="maestro-subpage" id="maestroSubProveedores">
+          <div class="section-title">Maestro — Proveedores y Clientes</div>
+          <div class="tipo-filtro-bar no-print" id="tipoFiltroBar">
+            <span class="tipo-filtro-label">Filtrar por tipo</span>
+            <button class="tipo-filtro-btn active" data-tipo-filtro="todos">Todos</button>
+            <button class="tipo-filtro-btn" data-tipo-filtro="fabrica">Fábrica</button>
+            <button class="tipo-filtro-btn" data-tipo-filtro="cx">CX</button>
+            <button class="tipo-filtro-btn" data-tipo-filtro="cliente">Cliente</button>
+          </div>
+          <div class="table-scroll" style="margin-bottom:16px;">
+            <table>
+              <thead><tr><th style="width:26px;"></th><th>Nombre</th><th>Ubicación (dirección)</th><th style="width:110px;">Tipo</th><th style="width:36px;" class="no-print"></th></tr></thead>
+              <tbody id="tbodyProveedores"></tbody>
+            </table>
+          </div>
+          <button class="btn-add-row no-print" data-cat="proveedores">+ Agregar Proveedor / Cliente</button>
+        </div>
 
       </div>
     </div>
@@ -792,7 +867,7 @@ tr.drag-over td{background:var(--accent-l); border-top:2px solid var(--accent);}
 /* ============================================================
    CONFIG / FIREBASE / LOCALSTORAGE
 ============================================================ */
-const FB_URL = "https://sgc-bt-default-rtdb.firebaseio.com";
+const FB_URL = "https://sgc2-72ddb-default-rtdb.firebaseio.com";
 const FB_PATH = "/reg014";
 const LS_KEY = "REG014_v1";
 let lastTs = 0;
@@ -874,6 +949,7 @@ const PERSONA_NOMBRE = { leo: "Leo", tito: "Tito" };
 let movPersonaActual = "leo";   // persona activa en la hoja Movimientos
 let pagosPersonaActual = "leo"; // persona activa en la hoja Pagos
 let pagosSubActual = "recorridos"; // subhoja activa en Pagos: "recorridos" o "extras"
+let maestroSubActual = "salud"; // subhoja activa en Maestros: "salud" | "encomiendas" | "esterilizadoras" | "proveedores"
 
 let DATA = {
   maestros: { salud: [], encomiendas: [], esterilizadoras: [], proveedores: [] },
@@ -1019,6 +1095,2305 @@ function normalizeData(d){
   return d;
 }
 
+/* Lista de Centros de Salud transcriptos desde la migración de notebooks (Excel
+   "Maestro_Logistica" -> hoja "Lugares visitados + proveed cx" -> tabla LUGARES
+   VISITADOS, migración LEO). Se cargan al maestro con el botón "Importar Centros
+   de Salud" en la hoja Maestros; no se agregan solos para no pisar Firebase. */
+const IMPORT_CENTROS_SALUD = [
+  { nombre: "SANATORIO ANCHORENA", ubicacion: "Anchorena 1872, CABA" },
+  { nombre: "SANATORIO ARGENTINO LA PLATA", ubicacion: "CALLE 56 N° 872, LA PLATA, Buenos Aires" },
+  { nombre: "SANATORIO BERNAL", ubicacion: "Av. San Martín 572, Bernal, Buenos Aires" },
+  { nombre: "SANATORIO SAN CAYETANO", ubicacion: "Directorio 4743, CABA" },
+  { nombre: "SANATORIO COLEGIALES", ubicacion: "Conde 851, CABA" },
+  { nombre: "SANATORIO CORPORACION MEDICA", ubicacion: "Matheu 4023, San Martín, Buenos Aires" },
+  { nombre: "SANATORIO DEL OESTE ITUZAINGÓ", ubicacion: "Gral. Félix Olazábal 319, ITUZAINGO, Buenos Aires" },
+  { nombre: "SANATORIO GENERAL SARMIENTO", ubicacion: "AV.J D PERON 1796, SAN MIGUEL, Buenos Aires" },
+  { nombre: "SANATORIO MATER DEI", ubicacion: "SAN MARTIN DE TOURS 2952, CABA" },
+  { nombre: "SANATORIO MODELO BURZACO", ubicacion: "Av. Tomás Espora 3250, Burzaco, Buenos Aires" },
+  { nombre: "SANATORIO MODELO DE CASEROS", ubicacion: "Lisandro Medina 2285, Caseros (Tres de Febrero), Buenos Aires" },
+  { nombre: "SANATORIO MODELO SOLANO", ubicacion: "Calle 841 N° 2469, Quilmes (Solano), Buenos Aires" },
+  { nombre: "SANATORIO NTA SRA DE LA MERCED", ubicacion: "Besada 6969, MARTIN CORONADO, Buenos Aires" },
+  { nombre: "CLINICA NUESTRA SRA FATIMA DEL PILAR", ubicacion: "Victor Vergani 830, Pilar, Buenos Aires" },
+  { nombre: "SANATORIO SAGRADO CORAZON", ubicacion: "BARTOLOME MITRE 1955, CABA" },
+  { nombre: "SANATORIO SAN FRANCISCO SARANDI", ubicacion: "MITRE 2455, SARANDI, Buenos Aires" },
+  { nombre: "CLINICA SANTA CLARA DE QUILMES", ubicacion: "AYACUCHO 1048, DON BOSCO, Buenos Aires" },
+  { nombre: "CLINICA SANTA CLARA ZARATRE", ubicacion: "Hipólito Yrigoyen 523, Zárate, Buenos Aires" },
+  { nombre: "SANATORIO SOLANO", ubicacion: "CALLE 841 NRO 2469, SAN FRANCISCO SOLANO, Buenos Aires" },
+  { nombre: "SANATORIO TRINIDAD MITRE", ubicacion: "BARTOLOME MITRE 2553, CABA" },
+  { nombre: "SANATORIO TRINIDAD PALERMO", ubicacion: "CERVIÑO 4720, CABA" },
+  { nombre: "SANATORIO TRINIDAD RAMOS", ubicacion: "Av. Rivadavia 13280, RAMOS MEJIA, Buenos Aires" },
+  { nombre: "SANATORIO TRINIDAD SAN ISIDRO JOCKEY", ubicacion: "Av. Sir Alexander Fleming 590, San Isidro, Buenos Aires" },
+  { nombre: "PRESTACIONES MEDICAS SAN JUAN BAUTISTA SA", ubicacion: "Av. Eva Perón 4855, Libertad (Merlo), Buenos Aires" },
+  { nombre: "POLICLINICO DEL DOCENTE", ubicacion: "LAVALLE 1974, CABA" },
+  { nombre: "POLICLINICO UOM - AVELLANEDA", ubicacion: "Pavon 670, AVELLANEDA, Buenos Aires" },
+  { nombre: "POLICLINICO DE LOMAS DE ZAMORA", ubicacion: "Av. Hipólito Yrigoyen 8439, LOMAS DE ZAMORA, Buenos Aires" },
+  { nombre: "CLINICA PRIV DE EXCELENCIAS MEDICAS", ubicacion: "Av. Díaz Vélez 4334, CABA" },
+  { nombre: "CANNING HEALTH INSTITUTE", ubicacion: "Mariano Castex 1078, Canning, Buenos Aires" },
+  { nombre: "CEMIC POMBO", ubicacion: "Las Heras 2900, CABA" },
+  { nombre: "CEMIC SAAVEDRA", ubicacion: "Galván 4102, CABA" },
+  { nombre: "CENTRO DIAGNÓSTICO LANÚS", ubicacion: "Doctor Domingo Nicanor Basavilbaso 1859, LANUS, Buenos Aires" },
+  { nombre: "CENTRO MEDICO EL TALAR", ubicacion: "RN197 1618, El Talar, Buenos Aires" },
+  { nombre: "CENTRO MEDICO FITZ ROY", ubicacion: "Acevedo 865, CABA" },
+  { nombre: "CLINICA BOEDO", ubicacion: "BOEDO 535, LOMAS DE ZAMORA, Buenos Aires" },
+  { nombre: "CLINICA CIUDAD DE LA VIDA", ubicacion: "Alberti 447, CABA" },
+  { nombre: "CLINICA CRUZ CELESTE", ubicacion: "Bermúdez 2895, Villa Luzuriaga (San Justo), Buenos Aires" },
+  { nombre: "CLINICA DE LA ESPERANZA", ubicacion: "Tres Arroyos 2060, CABA" },
+  { nombre: "CLINICA ESPORA", ubicacion: "Espora 645, ADROGUE, Buenos Aires" },
+  { nombre: "CLINICA FATIMA ESCOBAR", ubicacion: "SPADACCINI 1084, ESCOBAR, Buenos Aires" },
+  { nombre: "CLINICA FATIMA PILAR", ubicacion: "V. Verzoni 830, PILAR, Buenos Aires" },
+  { nombre: "CLINICA INDEPENDENCIA", ubicacion: "LUIS MARIA DRAGO 5681, MUNRO, Buenos Aires" },
+  { nombre: "CLINICA LOS CEDROS DE SAN JUSTO", ubicacion: "Dr A H Illia 2275, SAN JUSTO, Buenos Aires" },
+  { nombre: "CLINICA MODELO DE MORON", ubicacion: "URUGUAY 224, MORON, Buenos Aires" },
+  { nombre: "CLINICA MODELO DE QUILMES", ubicacion: "Andrés Baranda 282, Quilmes, Buenos Aires" },
+  { nombre: "CLINICA MODELO LANÚS", ubicacion: "H .Irigoyen 4835, LANUS, Buenos Aires" },
+  { nombre: "CLINICA MONTE GRANDE", ubicacion: "General Rodríguez 158, MONTE GRANDE, Buenos Aires" },
+  { nombre: "SANATORIO OTAMENDI Y MIROLI", ubicacion: "AZCUENAGA 870, CABA" },
+  { nombre: "CLINICA PRIVADA 2 DE ABRIL", ubicacion: "AV. MOLINA ARROTEA 2499, LOMAS DE ZAMORA, Buenos Aires" },
+  { nombre: "CLINICA PRIVADA BECCAR", ubicacion: "JULIAN NAVARRO 48, SAN ISIDRO, Buenos Aires" },
+  { nombre: "CLINICA PRIVADA CIUDAD EVITA", ubicacion: "Enfermera Reinalda Balancini Vda. de Rodríguez 3784, Ciudad Evita, Buenos Aires" },
+  { nombre: "CLINICA PRIVADA DE FRACTURAS", ubicacion: "Av. Independencia 1475, Mar del Plata, Buenos Aires" },
+  { nombre: "CLINICA PRIVADA DE ROJAS", ubicacion: "Hipólito Yrigoyen 229, Rojas, Buenos Aires" },
+  { nombre: "CLINICA PRIVADA ECO-BER", ubicacion: "Calle 3 entre 44 y 45, LA PLATA, Buenos Aires" },
+  { nombre: "CLINICA PRIVADA FATIMA", ubicacion: "Spadaccini 1084, Belén de Escobar, Buenos Aires" },
+  { nombre: "CLINICA PRIVADA LA FAMILIA SOLANO", ubicacion: "Calle 843 N° 2416, San Francisco Solano, Buenos Aires" },
+  { nombre: "CLINICA PRIVADA LIBERTAD", ubicacion: "AV. EVA PERON 4855, LIBERTAD, Buenos Aires" },
+  { nombre: "CLINICA PRIVADA MONTE GRANDE", ubicacion: "RODRIGUEZ 158, MONTE GRANDE, Buenos Aires" },
+  { nombre: "CLINICA PRIVADA OESTE", ubicacion: "San Martín 675, Bragado, Buenos Aires" },
+  { nombre: "CLINICA PRIVADA PACHECO", ubicacion: "H YRIGOYEN 2270, PACHECO, Buenos Aires" },
+  { nombre: "CLINICA PRIVADA RANELAGH", ubicacion: "Cno. Gral. Belgrano km 28.5, Berazategui (Ranelagh), Buenos Aires" },
+  { nombre: "CLINICA PRIVADA SALUD", ubicacion: "BALANCIN VIUDA DE RODRIGUEZ 3784, CIUDAD EVITA, Buenos Aires" },
+  { nombre: "CLINICA PRIVADA SAN ANDRES", ubicacion: "SABATINI 4776, CASEROS, Buenos Aires" },
+  { nombre: "CLINICA PRIVADA SAN FERNANDO", ubicacion: "Lavalle 1439, SAN FERNANDO, Buenos Aires" },
+  { nombre: "CLINICA PRIVADA SAN ISIDRO", ubicacion: "Rivadavia 310, San Isidro, Buenos Aires" },
+  { nombre: "CLINICA PRIVADA SAN MARCOS", ubicacion: "SAN LUIS 425, PILAR, Buenos Aires" },
+  { nombre: "CLINICA PRIVADA SAN VICENTE", ubicacion: "Av. Sarmiento 900-964, San Vicente, Buenos Aires" },
+  { nombre: "CLINICA SAN CAMILO", ubicacion: "Angel Gallardo 899, CABA" },
+  { nombre: "CLINICA SAN CARLOS", ubicacion: "RUTA 26 Y JUANXXIII, MAQ. SAVIO, Buenos Aires" },
+  { nombre: "CLINICA SAN FRANCISCO SAN JUSTO", ubicacion: "FIGUEROA ALCORTA 2662, SAN JUSTO, Buenos Aires" },
+  { nombre: "CLINICA SAN NICOLÁS", ubicacion: "Rivadavia 96, SAN NICOLAS, Buenos Aires" },
+  { nombre: "CLINICA SANTA ISABEL", ubicacion: "Directorio 2010, CABA" },
+  { nombre: "CLINICA SANTA MARIA", ubicacion: "Enrique Marengo 3908, VILLA BALLESTER, Buenos Aires" },
+  { nombre: "CLINICA TACHELA", ubicacion: "Av. Rivadavia 15639, HAEDO, Buenos Aires" },
+  { nombre: "CLINICA URQUIZA, QUILMES", ubicacion: "Urquiza 1537, Quilmes, Buenos Aires" },
+  { nombre: "CLÍNICA GÜEMES", ubicacion: "Mariano Moreno 1360, Luján, Buenos Aires" },
+  { nombre: "HOSPITAL DUPUYTREN", ubicacion: "Av. Belgrano 3402, CABA" },
+  { nombre: "HOSPITAL BICENTENARIO ITUZAINGO", ubicacion: "Cnel. Brandsen 2898, Ituzaingó, Buenos Aires" },
+  { nombre: "HOSPITAL CFK MAQUINISTA SAVIO", ubicacion: "RP26 318, Maquinista Savio, Buenos Aires" },
+  { nombre: "HOSPITAL CUENCA ALTA NESTOR", ubicacion: "RP6 Km 92,5, Cañuelas, Buenos Aires" },
+  { nombre: "Hospital Cuenca Alta. Cañuelas", ubicacion: "ruta Provincial n° 6, intersección de ruta 205, CAÑUELAS, Buenos Aires" },
+  { nombre: "HOSPITAL DE NIÑOS GUTIERREZ", ubicacion: "Gallo 1330, CABA" },
+  { nombre: "HOSPITAL DURAND", ubicacion: "Av. Díaz Vélez 5044, CABA" },
+  { nombre: "HOSPITAL EL CRUCE", ubicacion: "Av. Calchaquí 5401, Florencio Varela, Buenos Aires" },
+  { nombre: "HOSPITAL EVA PERÓN", ubicacion: "Balcarce 900, SAN MARTIN, Buenos Aires" },
+  { nombre: "HOSPITAL EVITA PUEBLO", ubicacion: "Calle 136 N° 2905, Berazategui, Buenos Aires" },
+  { nombre: "HOSPITAL FAVALORO", ubicacion: "Av. Belgrano 1746, CABA" },
+  { nombre: "HOSPITAL FERNÁNDEZ", ubicacion: "Cerviño 3356, CABA" },
+  { nombre: "SANATORIO FIGUEROA PAREDES", ubicacion: "JUAN MANUEL DE ROSAS 10841, RUTA 3 KM 28 - LAFERRERE, Buenos Aires" },
+  { nombre: "HOSPITAL FIORITO", ubicacion: "Belgrano 851, AVELLANEDA, Buenos Aires" },
+  { nombre: "HOSPITAL GRIERSON", ubicacion: "Av. Gral. Francisco Fernández de la Cruz 4402, CABA" },
+  { nombre: "HOSPITAL MARIA CURIE", ubicacion: "Av. Patricias Argentinas 150, CABA" },
+  { nombre: "HOSPITAL MILITAR", ubicacion: "Av. Luis María Campos 726, CABA" },
+  { nombre: "HOSPITAL CESAR MILTEIN", ubicacion: "La Rioja 951, CABA" },
+  { nombre: "HOSPITAL DR. OÑATIVIA", ubicacion: "Dr. Ramón Carrillo 1339, RAFAEL CALZADA, Buenos Aires" },
+  { nombre: "HOSPITAL PIROVANO", ubicacion: "MONRROE 3555, CABA" },
+  { nombre: "HOSPITAL DR POSADAS-SALADILLO", ubicacion: "Dr. Emparanza, Saladillo, Buenos Aires" },
+  { nombre: "HOSPITAL PRIVADO SUDAMERICANO", ubicacion: "Calle 2 entre 40 y 41, LA PLATA, Buenos Aires" },
+  { nombre: "HOSPITAL RAMOS MEJÍA", ubicacion: "Urquiza 609, CABA" },
+  { nombre: "HOSPITAL RAUL LARCADE", ubicacion: "Av. Pres. Juan Domingo Perón 2311, SAN MIGUEL, Buenos Aires" },
+  { nombre: "HOSPITAL ROFFO", ubicacion: "Av. San Martín 5481, CABA" },
+  { nombre: "HOSPITAL SAN ROQUE", ubicacion: "Calle 508 entre 18 y 19, GONNET, Buenos Aires" },
+  { nombre: "HOSPITAL MUNICIPAL J.C. SANGUINETTI PILAR", ubicacion: "Victor Vergani 860, Pilar, Buenos Aires" },
+  { nombre: "HOSPITAL SIRIO LIBANÉS", ubicacion: "Campana 4658, CABA" },
+  { nombre: "HOSPITAL SOR MARIA LUDOVICA", ubicacion: "Calle 14 N° 1631, entre 65 y 66, La Plata, Buenos Aires" },
+  { nombre: "HOSPITAL VÉLEZ SARFIELD", ubicacion: "Calderón de la Barca 1550, CABA" },
+  { nombre: "HOSPITAL ÁLVAREZ", ubicacion: "Aranguren 2701, CABA" },
+  { nombre: "CLINICA IMA ADROGUE", ubicacion: "FRANCISCO SEGUI 593, ADROGUE, Buenos Aires" },
+  { nombre: "INSTITUTO MEDICO AGUERO", ubicacion: "Azul 1831, Morón, Buenos Aires" },
+  { nombre: "INSTITUTO MEDICO SOLANO", ubicacion: "CALLE 841 Nº 2469, SAN FRANCISCO SOLANO, Buenos Aires" },
+  { nombre: "INT LUIS J SUEYRO LTDA SANATORIO FINOCHIETTO", ubicacion: "Av. Córdoba 2678, CABA" },
+  { nombre: "CLINICA MANUEL BELGRANO DE MAQUINISTA SAVIO", ubicacion: "RP26, Maquinista Savio, Buenos Aires" },
+  { nombre: "SANATORIO IPENSA", ubicacion: "Calle 59 434, LA PLATA, Buenos Aires" },
+];
+
+const MAESTROS_SEED = {
+  "salud": [
+    {
+      "id": "sal-001",
+      "nombre": "SANATORIO ANCHORENA",
+      "ubicacion": "Anchorena 1872, CABA"
+    },
+    {
+      "id": "sal-002",
+      "nombre": "SANATORIO ARGENTINO LA PLATA",
+      "ubicacion": "CALLE 56 N° 872, LA PLATA, Buenos Aires"
+    },
+    {
+      "id": "sal-003",
+      "nombre": "SANATORIO BERNAL",
+      "ubicacion": "Av. San Martín 572, Bernal, Buenos Aires"
+    },
+    {
+      "id": "sal-004",
+      "nombre": "SANATORIO SAN CAYETANO",
+      "ubicacion": "Directorio 4743, CABA"
+    },
+    {
+      "id": "sal-005",
+      "nombre": "SANATORIO COLEGIALES",
+      "ubicacion": "Conde 851, CABA"
+    },
+    {
+      "id": "sal-006",
+      "nombre": "SANATORIO CORPORACION MEDICA",
+      "ubicacion": "Matheu 4023, San Martín, Buenos Aires"
+    },
+    {
+      "id": "sal-007",
+      "nombre": "SANATORIO DEL OESTE ITUZAINGÓ",
+      "ubicacion": "Gral. Félix Olazábal 319, ITUZAINGO, Buenos Aires"
+    },
+    {
+      "id": "sal-008",
+      "nombre": "SANATORIO GENERAL SARMIENTO",
+      "ubicacion": "AV.J D PERON 1796, SAN MIGUEL, Buenos Aires"
+    },
+    {
+      "id": "sal-009",
+      "nombre": "SANATORIO MATER DEI",
+      "ubicacion": "SAN MARTIN DE TOURS 2952, CABA"
+    },
+    {
+      "id": "sal-010",
+      "nombre": "SANATORIO MODELO BURZACO",
+      "ubicacion": "Av. Tomás Espora 3250, Burzaco, Buenos Aires"
+    },
+    {
+      "id": "sal-011",
+      "nombre": "SANATORIO MODELO DE CASEROS",
+      "ubicacion": "Lisandro Medina 2285, Caseros (Tres de Febrero), Buenos Aires"
+    },
+    {
+      "id": "sal-012",
+      "nombre": "SANATORIO MODELO SOLANO",
+      "ubicacion": "Calle 841 N° 2469, Quilmes (Solano), Buenos Aires"
+    },
+    {
+      "id": "sal-013",
+      "nombre": "SANATORIO NTA SRA DE LA MERCED",
+      "ubicacion": "Besada 6969, MARTIN CORONADO, Buenos Aires"
+    },
+    {
+      "id": "sal-014",
+      "nombre": "CLINICA NUESTRA SRA FATIMA DEL PILAR",
+      "ubicacion": "Victor Vergani 830, Pilar, Buenos Aires"
+    },
+    {
+      "id": "sal-015",
+      "nombre": "SANATORIO SAGRADO CORAZON",
+      "ubicacion": "BARTOLOME MITRE 1955, CABA"
+    },
+    {
+      "id": "sal-016",
+      "nombre": "SANATORIO SAN FRANCISCO SARANDI",
+      "ubicacion": "MITRE 2455, SARANDI, Buenos Aires"
+    },
+    {
+      "id": "sal-017",
+      "nombre": "CLINICA SANTA CLARA DE QUILMES",
+      "ubicacion": "AYACUCHO 1048, DON BOSCO, Buenos Aires"
+    },
+    {
+      "id": "sal-018",
+      "nombre": "CLINICA SANTA CLARA ZARATRE",
+      "ubicacion": "Hipólito Yrigoyen 523, Zárate, Buenos Aires"
+    },
+    {
+      "id": "sal-019",
+      "nombre": "SANATORIO SOLANO",
+      "ubicacion": "CALLE 841 NRO 2469, SAN FRANCISCO SOLANO, Buenos Aires"
+    },
+    {
+      "id": "sal-020",
+      "nombre": "SANATORIO TRINIDAD MITRE",
+      "ubicacion": "BARTOLOME MITRE 2553, CABA"
+    },
+    {
+      "id": "sal-021",
+      "nombre": "SANATORIO TRINIDAD PALERMO",
+      "ubicacion": "CERVIÑO 4720, CABA"
+    },
+    {
+      "id": "sal-022",
+      "nombre": "SANATORIO TRINIDAD RAMOS",
+      "ubicacion": "Av. Rivadavia 13280, RAMOS MEJIA, Buenos Aires"
+    },
+    {
+      "id": "sal-023",
+      "nombre": "SANATORIO TRINIDAD SAN ISIDRO JOCKEY",
+      "ubicacion": "Av. Sir Alexander Fleming 590, San Isidro, Buenos Aires"
+    },
+    {
+      "id": "sal-024",
+      "nombre": "PRESTACIONES MEDICAS SAN JUAN BAUTISTA SA",
+      "ubicacion": "Av. Eva Perón 4855, Libertad (Merlo), Buenos Aires"
+    },
+    {
+      "id": "sal-025",
+      "nombre": "POLICLINICO DEL DOCENTE",
+      "ubicacion": "LAVALLE 1974, CABA"
+    },
+    {
+      "id": "sal-026",
+      "nombre": "POLICLINICO UOM - AVELLANEDA",
+      "ubicacion": "Pavon 670, AVELLANEDA, Buenos Aires"
+    },
+    {
+      "id": "sal-027",
+      "nombre": "POLICLINICO DE LOMAS DE ZAMORA",
+      "ubicacion": "Av. Hipólito Yrigoyen 8439, LOMAS DE ZAMORA, Buenos Aires"
+    },
+    {
+      "id": "sal-028",
+      "nombre": "CLINICA PRIV DE EXCELENCIAS MEDICAS",
+      "ubicacion": "Av. Díaz Vélez 4334, CABA"
+    },
+    {
+      "id": "sal-029",
+      "nombre": "CANNING HEALTH INSTITUTE",
+      "ubicacion": "Mariano Castex 1078, Canning, Buenos Aires"
+    },
+    {
+      "id": "sal-030",
+      "nombre": "CEMIC POMBO",
+      "ubicacion": "Las Heras 2900, CABA"
+    },
+    {
+      "id": "sal-031",
+      "nombre": "CEMIC SAAVEDRA",
+      "ubicacion": "Galván 4102, CABA"
+    },
+    {
+      "id": "sal-032",
+      "nombre": "CENTRO DIAGNÓSTICO LANÚS",
+      "ubicacion": "Doctor Domingo Nicanor Basavilbaso 1859, LANUS, Buenos Aires"
+    },
+    {
+      "id": "sal-033",
+      "nombre": "CENTRO MEDICO EL TALAR",
+      "ubicacion": "RN197 1618, El Talar, Buenos Aires"
+    },
+    {
+      "id": "sal-034",
+      "nombre": "CENTRO MEDICO FITZ ROY",
+      "ubicacion": "Acevedo 865, CABA"
+    },
+    {
+      "id": "sal-035",
+      "nombre": "CLINICA BOEDO",
+      "ubicacion": "BOEDO 535, LOMAS DE ZAMORA, Buenos Aires"
+    },
+    {
+      "id": "sal-036",
+      "nombre": "CLINICA CIUDAD DE LA VIDA",
+      "ubicacion": "Alberti 447, CABA"
+    },
+    {
+      "id": "sal-037",
+      "nombre": "CLINICA CRUZ CELESTE",
+      "ubicacion": "Bermúdez 2895, Villa Luzuriaga (San Justo), Buenos Aires"
+    },
+    {
+      "id": "sal-038",
+      "nombre": "CLINICA DE LA ESPERANZA",
+      "ubicacion": "Tres Arroyos 2060, CABA"
+    },
+    {
+      "id": "sal-039",
+      "nombre": "CLINICA ESPORA",
+      "ubicacion": "Espora 645, ADROGUE, Buenos Aires"
+    },
+    {
+      "id": "sal-040",
+      "nombre": "CLINICA FATIMA ESCOBAR",
+      "ubicacion": "SPADACCINI 1084, ESCOBAR, Buenos Aires"
+    },
+    {
+      "id": "sal-041",
+      "nombre": "CLINICA FATIMA PILAR",
+      "ubicacion": "V. Verzoni 830, PILAR, Buenos Aires"
+    },
+    {
+      "id": "sal-042",
+      "nombre": "CLINICA INDEPENDENCIA",
+      "ubicacion": "LUIS MARIA DRAGO 5681, MUNRO, Buenos Aires"
+    },
+    {
+      "id": "sal-043",
+      "nombre": "CLINICA LOS CEDROS DE SAN JUSTO",
+      "ubicacion": "Dr A H Illia 2275, SAN JUSTO, Buenos Aires"
+    },
+    {
+      "id": "sal-044",
+      "nombre": "CLINICA MODELO DE MORON",
+      "ubicacion": "URUGUAY 224, MORON, Buenos Aires"
+    },
+    {
+      "id": "sal-045",
+      "nombre": "CLINICA MODELO DE QUILMES",
+      "ubicacion": "Andrés Baranda 282, Quilmes, Buenos Aires"
+    },
+    {
+      "id": "sal-046",
+      "nombre": "CLINICA MODELO LANÚS",
+      "ubicacion": "H .Irigoyen 4835, LANUS, Buenos Aires"
+    },
+    {
+      "id": "sal-047",
+      "nombre": "CLINICA MONTE GRANDE",
+      "ubicacion": "General Rodríguez 158, MONTE GRANDE, Buenos Aires"
+    },
+    {
+      "id": "sal-048",
+      "nombre": "SANATORIO OTAMENDI Y MIROLI",
+      "ubicacion": "AZCUENAGA 870, CABA"
+    },
+    {
+      "id": "sal-049",
+      "nombre": "CLINICA PRIVADA 2 DE ABRIL",
+      "ubicacion": "AV. MOLINA ARROTEA 2499, LOMAS DE ZAMORA, Buenos Aires"
+    },
+    {
+      "id": "sal-050",
+      "nombre": "CLINICA PRIVADA BECCAR",
+      "ubicacion": "JULIAN NAVARRO 48, SAN ISIDRO, Buenos Aires"
+    },
+    {
+      "id": "sal-051",
+      "nombre": "CLINICA PRIVADA CIUDAD EVITA",
+      "ubicacion": "Enfermera Reinalda Balancini Vda. de Rodríguez 3784, Ciudad Evita, Buenos Aires"
+    },
+    {
+      "id": "sal-052",
+      "nombre": "CLINICA PRIVADA DE FRACTURAS",
+      "ubicacion": "Av. Independencia 1475, Mar del Plata, Buenos Aires"
+    },
+    {
+      "id": "sal-053",
+      "nombre": "CLINICA PRIVADA DE ROJAS",
+      "ubicacion": "Hipólito Yrigoyen 229, Rojas, Buenos Aires"
+    },
+    {
+      "id": "sal-054",
+      "nombre": "CLINICA PRIVADA ECO-BER",
+      "ubicacion": "Calle 3 entre 44 y 45, LA PLATA, Buenos Aires"
+    },
+    {
+      "id": "sal-055",
+      "nombre": "CLINICA PRIVADA FATIMA",
+      "ubicacion": "Spadaccini 1084, Belén de Escobar, Buenos Aires"
+    },
+    {
+      "id": "sal-056",
+      "nombre": "CLINICA PRIVADA LA FAMILIA SOLANO",
+      "ubicacion": "Calle 843 N° 2416, San Francisco Solano, Buenos Aires"
+    },
+    {
+      "id": "sal-057",
+      "nombre": "CLINICA PRIVADA LIBERTAD",
+      "ubicacion": "AV. EVA PERON 4855, LIBERTAD, Buenos Aires"
+    },
+    {
+      "id": "sal-058",
+      "nombre": "CLINICA PRIVADA MONTE GRANDE",
+      "ubicacion": "RODRIGUEZ 158, MONTE GRANDE, Buenos Aires"
+    },
+    {
+      "id": "sal-059",
+      "nombre": "CLINICA PRIVADA OESTE",
+      "ubicacion": "San Martín 675, Bragado, Buenos Aires"
+    },
+    {
+      "id": "sal-060",
+      "nombre": "CLINICA PRIVADA PACHECO",
+      "ubicacion": "H YRIGOYEN 2270, PACHECO, Buenos Aires"
+    },
+    {
+      "id": "sal-061",
+      "nombre": "CLINICA PRIVADA RANELAGH",
+      "ubicacion": "Cno. Gral. Belgrano km 28.5, Berazategui (Ranelagh), Buenos Aires"
+    },
+    {
+      "id": "sal-062",
+      "nombre": "CLINICA PRIVADA SALUD",
+      "ubicacion": "BALANCIN VIUDA DE RODRIGUEZ 3784, CIUDAD EVITA, Buenos Aires"
+    },
+    {
+      "id": "sal-063",
+      "nombre": "CLINICA PRIVADA SAN ANDRES",
+      "ubicacion": "SABATINI 4776, CASEROS, Buenos Aires"
+    },
+    {
+      "id": "sal-064",
+      "nombre": "CLINICA PRIVADA SAN FERNANDO",
+      "ubicacion": "Lavalle 1439, SAN FERNANDO, Buenos Aires"
+    },
+    {
+      "id": "sal-065",
+      "nombre": "CLINICA PRIVADA SAN ISIDRO",
+      "ubicacion": "Rivadavia 310, San Isidro, Buenos Aires"
+    },
+    {
+      "id": "sal-066",
+      "nombre": "CLINICA PRIVADA SAN MARCOS",
+      "ubicacion": "SAN LUIS 425, PILAR, Buenos Aires"
+    },
+    {
+      "id": "sal-067",
+      "nombre": "CLINICA PRIVADA SAN VICENTE",
+      "ubicacion": "Av. Sarmiento 900-964, San Vicente, Buenos Aires"
+    },
+    {
+      "id": "sal-068",
+      "nombre": "CLINICA SAN CAMILO",
+      "ubicacion": "Angel Gallardo 899, CABA"
+    },
+    {
+      "id": "sal-069",
+      "nombre": "CLINICA SAN CARLOS",
+      "ubicacion": "RUTA 26 Y JUANXXIII, MAQ. SAVIO, Buenos Aires"
+    },
+    {
+      "id": "sal-070",
+      "nombre": "CLINICA SAN FRANCISCO SAN JUSTO",
+      "ubicacion": "FIGUEROA ALCORTA 2662, SAN JUSTO, Buenos Aires"
+    },
+    {
+      "id": "sal-071",
+      "nombre": "CLINICA SAN NICOLÁS",
+      "ubicacion": "Rivadavia 96, SAN NICOLAS, Buenos Aires"
+    },
+    {
+      "id": "sal-072",
+      "nombre": "CLINICA SANTA ISABEL",
+      "ubicacion": "Directorio 2010, CABA"
+    },
+    {
+      "id": "sal-073",
+      "nombre": "CLINICA SANTA MARIA",
+      "ubicacion": "Enrique Marengo 3908, VILLA BALLESTER, Buenos Aires"
+    },
+    {
+      "id": "sal-074",
+      "nombre": "CLINICA TACHELA",
+      "ubicacion": "Av. Rivadavia 15639, HAEDO, Buenos Aires"
+    },
+    {
+      "id": "sal-075",
+      "nombre": "CLINICA URQUIZA, QUILMES",
+      "ubicacion": "Urquiza 1537, Quilmes, Buenos Aires"
+    },
+    {
+      "id": "sal-076",
+      "nombre": "CLÍNICA GÜEMES",
+      "ubicacion": "Mariano Moreno 1360, Luján, Buenos Aires"
+    },
+    {
+      "id": "sal-077",
+      "nombre": "HOSPITAL DUPUYTREN",
+      "ubicacion": "Av. Belgrano 3402, CABA"
+    },
+    {
+      "id": "sal-078",
+      "nombre": "HOSPITAL BICENTENARIO ITUZAINGO",
+      "ubicacion": "Cnel. Brandsen 2898, Ituzaingó, Buenos Aires"
+    },
+    {
+      "id": "sal-079",
+      "nombre": "HOSPITAL CFK MAQUINISTA SAVIO",
+      "ubicacion": "RP26 318, Maquinista Savio, Buenos Aires"
+    },
+    {
+      "id": "sal-080",
+      "nombre": "HOSPITAL CUENCA ALTA NESTOR",
+      "ubicacion": "RP6 Km 92,5, Cañuelas, Buenos Aires"
+    },
+    {
+      "id": "sal-081",
+      "nombre": "Hospital Cuenca Alta. Cañuelas",
+      "ubicacion": "ruta Provincial n° 6, intersección de ruta 205, CAÑUELAS, Buenos Aires"
+    },
+    {
+      "id": "sal-082",
+      "nombre": "HOSPITAL DE NIÑOS GUTIERREZ",
+      "ubicacion": "Gallo 1330, CABA"
+    },
+    {
+      "id": "sal-083",
+      "nombre": "HOSPITAL DURAND",
+      "ubicacion": "Av. Díaz Vélez 5044, CABA"
+    },
+    {
+      "id": "sal-084",
+      "nombre": "HOSPITAL EL CRUCE",
+      "ubicacion": "Av. Calchaquí 5401, Florencio Varela, Buenos Aires"
+    },
+    {
+      "id": "sal-085",
+      "nombre": "HOSPITAL EVA PERÓN",
+      "ubicacion": "Balcarce 900, SAN MARTIN, Buenos Aires"
+    },
+    {
+      "id": "sal-086",
+      "nombre": "HOSPITAL EVITA PUEBLO",
+      "ubicacion": "Calle 136 N° 2905, Berazategui, Buenos Aires"
+    },
+    {
+      "id": "sal-087",
+      "nombre": "HOSPITAL FAVALORO",
+      "ubicacion": "Av. Belgrano 1746, CABA"
+    },
+    {
+      "id": "sal-088",
+      "nombre": "HOSPITAL FERNÁNDEZ",
+      "ubicacion": "Cerviño 3356, CABA"
+    },
+    {
+      "id": "sal-089",
+      "nombre": "SANATORIO FIGUEROA PAREDES",
+      "ubicacion": "JUAN MANUEL DE ROSAS 10841, RUTA 3 KM 28 - LAFERRERE, Buenos Aires"
+    },
+    {
+      "id": "sal-090",
+      "nombre": "HOSPITAL FIORITO",
+      "ubicacion": "Belgrano 851, AVELLANEDA, Buenos Aires"
+    },
+    {
+      "id": "sal-091",
+      "nombre": "HOSPITAL GRIERSON",
+      "ubicacion": "Av. Gral. Francisco Fernández de la Cruz 4402, CABA"
+    },
+    {
+      "id": "sal-092",
+      "nombre": "HOSPITAL MARIA CURIE",
+      "ubicacion": "Av. Patricias Argentinas 150, CABA"
+    },
+    {
+      "id": "sal-093",
+      "nombre": "HOSPITAL MILITAR",
+      "ubicacion": "Av. Luis María Campos 726, CABA"
+    },
+    {
+      "id": "sal-094",
+      "nombre": "HOSPITAL CESAR MILTEIN",
+      "ubicacion": "La Rioja 951, CABA"
+    },
+    {
+      "id": "sal-095",
+      "nombre": "HOSPITAL DR. OÑATIVIA",
+      "ubicacion": "Dr. Ramón Carrillo 1339, RAFAEL CALZADA, Buenos Aires"
+    },
+    {
+      "id": "sal-096",
+      "nombre": "HOSPITAL PIROVANO",
+      "ubicacion": "MONRROE 3555, CABA"
+    },
+    {
+      "id": "sal-097",
+      "nombre": "HOSPITAL DR POSADAS-SALADILLO",
+      "ubicacion": "Dr. Emparanza, Saladillo, Buenos Aires"
+    },
+    {
+      "id": "sal-098",
+      "nombre": "HOSPITAL PRIVADO SUDAMERICANO",
+      "ubicacion": "Calle 2 entre 40 y 41, LA PLATA, Buenos Aires"
+    },
+    {
+      "id": "sal-099",
+      "nombre": "HOSPITAL RAMOS MEJÍA",
+      "ubicacion": "Urquiza 609, CABA"
+    },
+    {
+      "id": "sal-100",
+      "nombre": "HOSPITAL RAUL LARCADE",
+      "ubicacion": "Av. Pres. Juan Domingo Perón 2311, SAN MIGUEL, Buenos Aires"
+    },
+    {
+      "id": "sal-101",
+      "nombre": "HOSPITAL ROFFO",
+      "ubicacion": "Av. San Martín 5481, CABA"
+    },
+    {
+      "id": "sal-102",
+      "nombre": "HOSPITAL SAN ROQUE",
+      "ubicacion": "Calle 508 entre 18 y 19, GONNET, Buenos Aires"
+    },
+    {
+      "id": "sal-103",
+      "nombre": "HOSPITAL MUNICIPAL J.C. SANGUINETTI PILAR",
+      "ubicacion": "Victor Vergani 860, Pilar, Buenos Aires"
+    },
+    {
+      "id": "sal-104",
+      "nombre": "HOSPITAL SIRIO LIBANÉS",
+      "ubicacion": "Campana 4658, CABA"
+    },
+    {
+      "id": "sal-105",
+      "nombre": "HOSPITAL SOR MARIA LUDOVICA",
+      "ubicacion": "Calle 14 N° 1631, entre 65 y 66, La Plata, Buenos Aires"
+    },
+    {
+      "id": "sal-106",
+      "nombre": "HOSPITAL VÉLEZ SARFIELD",
+      "ubicacion": "Calderón de la Barca 1550, CABA"
+    },
+    {
+      "id": "sal-107",
+      "nombre": "HOSPITAL ÁLVAREZ",
+      "ubicacion": "Aranguren 2701, CABA"
+    },
+    {
+      "id": "sal-108",
+      "nombre": "CLINICA IMA ADROGUE",
+      "ubicacion": "FRANCISCO SEGUI 593, ADROGUE, Buenos Aires"
+    },
+    {
+      "id": "sal-109",
+      "nombre": "INSTITUTO MEDICO AGUERO",
+      "ubicacion": "Azul 1831, Morón, Buenos Aires"
+    },
+    {
+      "id": "sal-110",
+      "nombre": "INSTITUTO MEDICO SOLANO",
+      "ubicacion": "CALLE 841 Nº 2469, SAN FRANCISCO SOLANO, Buenos Aires"
+    },
+    {
+      "id": "sal-111",
+      "nombre": "INT LUIS J SUEYRO LTDA SANATORIO FINOCHIETTO",
+      "ubicacion": "Av. Córdoba 2678, CABA"
+    },
+    {
+      "id": "sal-112",
+      "nombre": "CLINICA MANUEL BELGRANO DE MAQUINISTA SAVIO",
+      "ubicacion": "RP26, Maquinista Savio, Buenos Aires"
+    },
+    {
+      "id": "sal-113",
+      "nombre": "SANATORIO IPENSA",
+      "ubicacion": "Calle 59 434, LA PLATA, Buenos Aires"
+    }
+  ],
+  "encomiendas": [
+    {
+      "id": "enc-001",
+      "nombre": "Retiro",
+      "ubicacion": "Av. Dr. José María Ramos Mejía 1680, CABA, Buenos Aires"
+    },
+    {
+      "id": "enc-002",
+      "nombre": "Aeroparque",
+      "ubicacion": "Av. Rafael Obligado s/n, CABA, Buenos Aires"
+    },
+    {
+      "id": "enc-003",
+      "nombre": "El rápido",
+      "ubicacion": "Pergamino 3751, CABA, Buenos Aires"
+    },
+    {
+      "id": "enc-004",
+      "nombre": "Velomax",
+      "ubicacion": "Ferré 2656, CABA, Buenos Aires"
+    },
+    {
+      "id": "enc-005",
+      "nombre": "Interpost",
+      "ubicacion": "Salcedo 2855, CABA, Buenos Aires"
+    },
+    {
+      "id": "enc-006",
+      "nombre": "Camionera Mendocina",
+      "ubicacion": "Av. San Pedrito 3771, CABA, Buenos Aires"
+    }
+  ],
+  "esterilizadoras": [
+    {
+      "id": "est-001",
+      "nombre": "Back",
+      "ubicacion": "Moctezuma 1050, Cdad. Autónoma de Buenos Aires, CABA, Buenos Aires"
+    },
+    {
+      "id": "est-002",
+      "nombre": "Zerox",
+      "ubicacion": "Juan de Garay 717, San Martin, Buenos Aires"
+    }
+  ],
+  "proveedores": [
+    {
+      "id": "prv-001",
+      "nombre": "Tecno Industria Americana (ABERTURAS)",
+      "ubicacion": "Echeverría 3400, Don Torcuato, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-002",
+      "nombre": "OGP Lubricantes S.A. (ACEITE)",
+      "ubicacion": "San Juan 1730, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-003",
+      "nombre": "MANTEC (ACEITE)",
+      "ubicacion": "Oliden 689, Lomas de Zamora, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-004",
+      "nombre": "PERFORMANCE LUBE (ACEITE)",
+      "ubicacion": "Av. Presidente Perón 7948, Villa Udaondo, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-005",
+      "nombre": "Tecno Insumos SRL (ACEITE)",
+      "ubicacion": "Miralla 1721, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-006",
+      "nombre": "Moyano aceros y herramientas. (ACERO)",
+      "ubicacion": "Hubac 5272, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-007",
+      "nombre": "Aceros Griveo (Aceros y hierro)",
+      "ubicacion": "Griveo 3857, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-008",
+      "nombre": "Alpamet SRL (Afilado)",
+      "ubicacion": "Av. San Martín 3007, Lanús, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-009",
+      "nombre": "Hugo Torbidoni y Cia SRL (Agua destilada)",
+      "ubicacion": "Dr. Nicolás Repetto 1346, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-010",
+      "nombre": "Aluminium Manufacturers Express (AMEX) SA (AL)",
+      "ubicacion": "Monseñor José Francisco Marcón 5070, La Tablada, La Matanza, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-011",
+      "nombre": "ILPEM S.A. (Al)",
+      "ubicacion": "SANTO DOMINGO 2451, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-012",
+      "nombre": "JL Metales (AL)",
+      "ubicacion": "Av. Mitre 3380, Caseros, Tres de Febrero, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-013",
+      "nombre": "LIT ALUMINIO (AL)",
+      "ubicacion": "Perdriel 4265, San Martín, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-014",
+      "nombre": "Martucci Roberto (Al)",
+      "ubicacion": "Diaz Velez 3647, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-015",
+      "nombre": "MULTIBUJES S.A. (AL / BRONCE)",
+      "ubicacion": "Estados Unidos 2002, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-016",
+      "nombre": "ORMETAL (AL)",
+      "ubicacion": "Nazca 4000, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-017",
+      "nombre": "PRIMALCO S.A. (AL)",
+      "ubicacion": "Av. José María Moreno 1453, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-018",
+      "nombre": "Limsis Art Limpieza profesional (ALCOHOL - ARTICULOS DE LIMPIEZA)",
+      "ubicacion": "Bartolomé Mitre 2638, Villa Maipu, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-019",
+      "nombre": "Emisión y control (Análisis bactereológico y fisico químico del agua y desinfección del tanque de agua. Prueba hidraulica del compresor)",
+      "ubicacion": "Av. Maipú 4169, Ciudadela, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-020",
+      "nombre": "Ceccarelli Hnos. y Tristán SRL (Anodizado)",
+      "ubicacion": "Balcarce 433, Ramos Mejía, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-021",
+      "nombre": "CIMA \"La Galvanoplastía\" (Anodizado / Electro pulido)",
+      "ubicacion": "Sarmiento 1441, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-022",
+      "nombre": "CASIBA (Area Limpia)",
+      "ubicacion": "Av. Mitre 3976, Caseros, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-023",
+      "nombre": "BLASTING SA (ARENADORA)",
+      "ubicacion": "Int. Amaro Ávalos 3176, Munro, Vicente López, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-024",
+      "nombre": "AIR BLAST (ARENADORA)",
+      "ubicacion": "Camino Gral. Belgrano 5955, Florencio Varela, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-025",
+      "nombre": "GASES SAN MARTIN (ARGÓN)",
+      "ubicacion": "Av. Ricardo Balbín 1501, San Martín, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-026",
+      "nombre": "OXIGENO DORREGO (ARGÓN)",
+      "ubicacion": "AV. DORREGO 212, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-027",
+      "nombre": "Oxigeno Juan B Justo (ARGÓN)",
+      "ubicacion": "THAMES 214, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-028",
+      "nombre": "Energía San Martín - ESM Recargable (BATERIAS)",
+      "ubicacion": "Yapeyú 2028, San Martín, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-029",
+      "nombre": "BRINSA SRL (BRONCE / BUJES)",
+      "ubicacion": "Av. General Paz 14529, Villa Madero, La Matanza, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-030",
+      "nombre": "ABUL S.R.L. (BULONERA / Tornillos)",
+      "ubicacion": "Venezuela 4761, Villa Martelli, Vicente López, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-031",
+      "nombre": "BULONERA AMERICANA (BULONERA)",
+      "ubicacion": "Carlos Calvo 2665, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-032",
+      "nombre": "Bulonera Juanca P & L (BULONERA)",
+      "ubicacion": "Maza 1659, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-033",
+      "nombre": "Bulonera Tornibulon (BULONERA)",
+      "ubicacion": "AV. JUAN DE GARAY 1833, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-034",
+      "nombre": "Bulonera Vietri S.R.L (BULONERA)",
+      "ubicacion": "WARNES 565, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-035",
+      "nombre": "CAJAS YA (Cajas de corrugado plastico)",
+      "ubicacion": "Humboldt 559, Villa Crespo, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-036",
+      "nombre": "CEPILLOS INDUSTRIALES TRIUNFO S.A. (Cepillos Industriales)",
+      "ubicacion": "BERMUDEZ 760, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-037",
+      "nombre": "InSum Store (CIRUGIA)",
+      "ubicacion": "Erasmo 1155, Villa Lynch, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-038",
+      "nombre": "TECNOCOMPRESORES (COMPRESOR)",
+      "ubicacion": "Francisco Borges 4931, Munro, Vicente López, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-039",
+      "nombre": "Prodin automatizacion (Compresor Mantenimiento)",
+      "ubicacion": "Av. Pres. Bernardino Rivadavia 1941, Valentín Alsina, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-040",
+      "nombre": "Zebra Compresores (Compresor Mantenimiento)",
+      "ubicacion": "Agustín Cafferata 5148, Caseros, Tres de Febrero, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-041",
+      "nombre": "CONECTICA (CONECTORES INDUSTRIALES)",
+      "ubicacion": "CONDE 602, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-042",
+      "nombre": "BANDAX (CORREAS)",
+      "ubicacion": "Edison 2439, Martínez, San Isidro, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-043",
+      "nombre": "CORREAS RINCON (CORREAS)",
+      "ubicacion": "Sargento Cabral 178, El Palomar, Morón, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-044",
+      "nombre": "GOMAFILTROS (CORREAS)",
+      "ubicacion": "DR. NICOLAS REPETTO 2017, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-045",
+      "nombre": "TISA TRANSMISIONES (CORREAS)",
+      "ubicacion": "Av. Eva Perón 611, Temperley, Lomas de Zamora, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-046",
+      "nombre": "Todo Correas (CORREAS)",
+      "ubicacion": "Av Warnes 507, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-047",
+      "nombre": "TODO GOMA (CORREAS)",
+      "ubicacion": "Díaz Vélez 4085, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-048",
+      "nombre": "TRANSMISIONES GALICIA (CORREAS)",
+      "ubicacion": "Av. Rivadavia 883, Avellaneda, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-049",
+      "nombre": "CORTES DE PRESICION (CORTE CHAPA)",
+      "ubicacion": "Av. del Libertador Gral. San Martín 1159, San Martín, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-050",
+      "nombre": "HERRERIA HG (corte y plegado de chapas)",
+      "ubicacion": "Santiago del Estero 3247, Lanús Oeste, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-051",
+      "nombre": "LECTUS (DETERGENTE TRIENZIMATICO AREA LIMPIA)",
+      "ubicacion": "Av. Belgrano 1217, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-052",
+      "nombre": "EURATOM (ELECTRODOS)",
+      "ubicacion": "Av. Bartolomé Mitre 3304, Munro, Vicente López, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-053",
+      "nombre": "Abc Empaques SRL (EMPAQUETADO)",
+      "ubicacion": "Libertad 5927, Villa Ballester, San Martín, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-054",
+      "nombre": "AXEL COPY (EMPAQUETADO)",
+      "ubicacion": "Camargo 448, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-055",
+      "nombre": "ITAL RESORTES (Enderezado de alambre)",
+      "ubicacion": "Cabildo 1455, Villa Madero, La Matanza, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-056",
+      "nombre": "Redondi (Engranajes)",
+      "ubicacion": "Pedro Lozano 4347, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-057",
+      "nombre": "OTIA (Espinas)",
+      "ubicacion": "Calle 91 Nº 1745, San Martín, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-058",
+      "nombre": "TECNO LABEL (ETIQUETAS)",
+      "ubicacion": "Av. de Mayo 1650, Ramos Mejía, La Matanza, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-059",
+      "nombre": "Ferretería Femar (Ferretería)",
+      "ubicacion": "Av. San Martín 2045, Lanús Oeste, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-060",
+      "nombre": "Ferretería Industrial Ferrima De Lucio Spano (FERRETERIA)",
+      "ubicacion": "Pacífico Rodríguez 5321, Villa Ballester, San Martín, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-061",
+      "nombre": "Bulonera Herramil (FERRETERIA)",
+      "ubicacion": "AV. LA PLATA 838, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-062",
+      "nombre": "SILFA Distribuidor de Herramientas (Ferretería)",
+      "ubicacion": "Concordia 1358, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-063",
+      "nombre": "DITOMA (FERRETERIA INDUSTRIAL)",
+      "ubicacion": "Santiago Zanella 3149, Caseros, Tres de Febrero, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-064",
+      "nombre": "Máquinas e Insumos SRL - Distribuidora MEI (FERRETERIA INDUSTRIAL)",
+      "ubicacion": "Av. Bernardo Ader 1345, Villa Adelina, San Isidro, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-065",
+      "nombre": "Gomaplast SAIC (GOMAS , SILICONAS)",
+      "ubicacion": "GRAL. DANIEL CERRI 1190, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-066",
+      "nombre": "Molinari Maquinarias (Habilitación Horas Hass)",
+      "ubicacion": "Av. 101 Dr. Ricardo Balbín 3418, Villa Juan Martín de Pueyrredón, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-067",
+      "nombre": "ACCESORIOS Y HERRAMIENTAS (HERRAMIENTAS)",
+      "ubicacion": "Río Cuarto 1636, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-068",
+      "nombre": "SIN PAR (HERRAMIENTAS / HOJA DE SIERRA)",
+      "ubicacion": "Conesa 10, Quilmes, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-069",
+      "nombre": "Iscar (Herramientas de Corte)",
+      "ubicacion": "Monteagudo 222, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-070",
+      "nombre": "RATTI (Hierros - chapas)",
+      "ubicacion": "Honduras 5051, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-071",
+      "nombre": "Insumatric S.R.L (Hilo de Molibdeno/ liquido dielectrico)",
+      "ubicacion": "Calle 95 Padre Ashkar 448, Villa Lynch, San Martín, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-072",
+      "nombre": "SIMACO SRL (HOJAS DE CIERRA)",
+      "ubicacion": "Av. Avellaneda 4053, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-073",
+      "nombre": "BIOPROTECE (IMPLANTES)",
+      "ubicacion": "Vicente López 4334, Villa Ballester, San Martín, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-074",
+      "nombre": "THEBMYA S.R.L. (Importador y Distribuidor)",
+      "ubicacion": "Av. Saturnino Segurola 612, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-075",
+      "nombre": "ACEROS NORTE (Inox)",
+      "ubicacion": "Entre Ríos 4068, Munro, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-076",
+      "nombre": "ALAMBRES RUMBOS S.A. (Inox)",
+      "ubicacion": "Ayacucho 3232, Lanús Este, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-077",
+      "nombre": "APERAM (Inox)",
+      "ubicacion": "Avda. Descartes 4200, Tortuguitas, Malvinas Argentinas, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-078",
+      "nombre": "CISA CASEROS INOX. S.A. (Inox)",
+      "ubicacion": "Urquiza 3170, Caseros, Tres de Febrero, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-079",
+      "nombre": "FAMIQ S.A. (INOX)",
+      "ubicacion": "AVDA. SAN MARTÌN 4723, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-080",
+      "nombre": "GROUP STEEL (Inox)",
+      "ubicacion": "Av. Pres. Perón 8725, Villa Udaondo, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-081",
+      "nombre": "INDUSTRIAS MAINER S.R.L. (INOX)",
+      "ubicacion": "Pavón 3232, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-082",
+      "nombre": "JORVICAL ACEROS S.A. (Inox)",
+      "ubicacion": "Catamarca 1527, Lanús Oeste, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-083",
+      "nombre": "PIERRI CAÑOS (INOX)",
+      "ubicacion": "José María Freire 60, Avellaneda, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-084",
+      "nombre": "PRODMET S.A. (Inox)",
+      "ubicacion": "USPALLATA 2751, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-085",
+      "nombre": "SUMINOX SRL (INOX)",
+      "ubicacion": "Jose Marti 1531, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-086",
+      "nombre": "Aceros Inoxidables Ruta 3 (Inox caño)",
+      "ubicacion": "Brigadier Juan Manuel de Rosas 1518, Lomas del Mirador, La Matanza, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-087",
+      "nombre": "JBMINOX (INOX CAÑO)",
+      "ubicacion": "General Lavalle 9240, Loma Hermosa, Tres de Febrero, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-088",
+      "nombre": "Dessol Industrial (Inox corte y plegado)",
+      "ubicacion": "Talcahuano 550, Villa Martelli, Vicente López, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-089",
+      "nombre": "Tecno Widia (INSERTOS)",
+      "ubicacion": "Piedras 335, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-090",
+      "nombre": "MECANIZADOS MAIPU (LAMINADO)",
+      "ubicacion": "J.A. Roca 2552, Villa Maipú, San Martín, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-091",
+      "nombre": "Zurzolo e Hijos SA (Laminado Rodillos)",
+      "ubicacion": "Almafuerte 70, Villa Luzuriaga, La Matanza, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-092",
+      "nombre": "TESLAB (Lav Ultrasonido Servicio Técnico)",
+      "ubicacion": "Av. de los Quilmes 27, Bernal Oeste, Quilmes, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-093",
+      "nombre": "Metal Chem S.A. (Líquido para lavadora)",
+      "ubicacion": "Av. R. Balbín 4031, Villa Ballester, San Martín, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-094",
+      "nombre": "GONTEL (MANGUERAS)",
+      "ubicacion": "AV. WARNES 975, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-095",
+      "nombre": "HIDRAULICA GOMAR (Mangueras)",
+      "ubicacion": "Av. Crovara 2673, Tablada, La Matanza, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-096",
+      "nombre": "SOLOGOMA (Mangueras)",
+      "ubicacion": "AV. BOEDO 1900, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-097",
+      "nombre": "TODOFLEX (Mangueras)",
+      "ubicacion": "Av. Bartolomé Mitre 4627, Caseros, Tres de Febrero, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-098",
+      "nombre": "DI NORTE (MANOMETRO)",
+      "ubicacion": "BLANCO ENCALADA 5619, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-099",
+      "nombre": "Maindplast Maquinarias (Maq de Term Blister)",
+      "ubicacion": "Gutiérrez 1315, Villa Maipú, San Martín, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-100",
+      "nombre": "METALSA Metalurgica Sebastian Abate (Mecanizado)",
+      "ubicacion": "Av. Diagonal 101 Nº 537 (ex Sadi Canot 135), Villa Lynch, San Martín, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-101",
+      "nombre": "BARROS, ENRIQUE A. E HIJOS (Mecanizado)",
+      "ubicacion": "AVDA. LA PLATA 838, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-102",
+      "nombre": "ZEZIOLA Dobladoras de caños (Mecanizado de semiaros)",
+      "ubicacion": "Rio Negro 8645, Loma Hermosa, Tres de Febrero, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-103",
+      "nombre": "Ezeta (Mechas)",
+      "ubicacion": "Pitágoras 660, Carlos Spegazzini, Ezeiza, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-104",
+      "nombre": "DYM metal (METALES)",
+      "ubicacion": "Diego Pombo 4334, San Martín, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-105",
+      "nombre": "Alberto Malito Metales (METALES)",
+      "ubicacion": "Av. Hipólito Yrigoyen 1050, Avellaneda, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-106",
+      "nombre": "Deels Metales y Plasticos S.R.L. (Metales y Plásticos)",
+      "ubicacion": "Remedios de Escalada de San Martín 3047, Valentín Alsina, Lanús, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-107",
+      "nombre": "GALAPLAST SRL (NYLON AREA LIMPIA)",
+      "ubicacion": "Gral. Juan Lavalle 4151, Villa Martelli, Vicente López, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-108",
+      "nombre": "BIVORT SRL (O Ring)",
+      "ubicacion": "14 de Julio 652, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-109",
+      "nombre": "TECNOPEG (O Ring)",
+      "ubicacion": "Crespo 3331, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-110",
+      "nombre": "AGROPLASTIC (PAPEL)",
+      "ubicacion": "Sebastián Gaboto 4762, Munro, Vicente López, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-111",
+      "nombre": "DIATREK (Piedra diamantada)",
+      "ubicacion": "Gregorio de Laferrère 5955, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-112",
+      "nombre": "MOLINA Carlos Antonio (PLASTICO)",
+      "ubicacion": "Sta. María del Buen Aire 550, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-113",
+      "nombre": "DATAPLAST (PLASTICOS)",
+      "ubicacion": "Blas Parera 197, Ramos Mejia, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-114",
+      "nombre": "DAYPLAS S.A. (PLASTICOS)",
+      "ubicacion": "AV. COMBATIENTES DE MALVINAS 3197, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-115",
+      "nombre": "Heling (PLASTICOS)",
+      "ubicacion": "Niceto Vega 5331, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-116",
+      "nombre": "INDUSTRIAS JQ (PLASTICOS / PEEK)",
+      "ubicacion": "Vieytes 1524, Barracas, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-117",
+      "nombre": "NYLTEF S.A.I.C.F.I. (PLASTICOS)",
+      "ubicacion": "DARWIN 255, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-118",
+      "nombre": "EUROMETAL SRL (PLATA APORTE SOLDADURA)",
+      "ubicacion": "Corvalán 2133, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-119",
+      "nombre": "METALES JULIO (PLATA APORTE SOLDADURA)",
+      "ubicacion": "Av. Warnes 702, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-120",
+      "nombre": "EFELAB (POUCH)",
+      "ubicacion": "Costa Rica 449 1043, Ituzaingó, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-121",
+      "nombre": "TODO COLOR GRAFICA (PROSPECTOS)",
+      "ubicacion": "LA RIOJA 395, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-122",
+      "nombre": "Colloca sa (REMACHES)",
+      "ubicacion": "Esmeralda 1888, Florida, Vicente López, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-123",
+      "nombre": "Corradini Remaches (Remaches)",
+      "ubicacion": "Lisandro de la Torre 3041, Caseros, Tres de Febrero, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-124",
+      "nombre": "SELFLEX (REMACHES)",
+      "ubicacion": "Boulogne Sur Mer 372, La Tablada, La Matanza, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-125",
+      "nombre": "Casa Astri (Resistencias blindadas)",
+      "ubicacion": "Merlo 465, La Tablada, La Matanza, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-126",
+      "nombre": "Resortes Goteborg (Resortes)",
+      "ubicacion": "Chile 2229, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-127",
+      "nombre": "ABC industria (Rodamientos)",
+      "ubicacion": "Wenseslao Villafañe 481, La Boca, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-128",
+      "nombre": "Dalman Rulemanes (Rodamientos)",
+      "ubicacion": "AV. BELGRANO 2048, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-129",
+      "nombre": "Jotace Rodamientos (Rodamientos)",
+      "ubicacion": "C Jose Clemente de Paz 4156, San Martín, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-130",
+      "nombre": "Fumigadora Alemana (Rodilon ( Bloques ) - Maxforce Gel)",
+      "ubicacion": "Av. Lisandro de la Torre 1191, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-131",
+      "nombre": "BTEC (SERVO MOTORES)",
+      "ubicacion": "Av. Gral. Juan Domingo Perón 4616, Benavídez, Tigre, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-132",
+      "nombre": "GASES FLORES (SOLDADURA GAS)",
+      "ubicacion": "Echeandía 3027, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-133",
+      "nombre": "Abrasivos Sableco SA (Tela esmeril)",
+      "ubicacion": "Remedios Escalada de San Martin 3627, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-134",
+      "nombre": "Nitrogas (TEMPLADO)",
+      "ubicacion": "Alvear 3465, Lomas del Mirador, La Matanza, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-135",
+      "nombre": "TERMIA (TEMPLADO)",
+      "ubicacion": "Tte. Gral. Ricchieri 3640, Ciudadela, Tres de Febrero, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-136",
+      "nombre": "TRATAMIENTO TERMICO INTEGRAL (TEMPLADO)",
+      "ubicacion": "Peribebuy 2355, La Tablada, La Matanza, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-137",
+      "nombre": "BI-ORIENT (TERMOCONTRAIBLES)",
+      "ubicacion": "Tres Arroyos 329, Haedo, Morón, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-138",
+      "nombre": "BIOMATERIALES (TITANIO)",
+      "ubicacion": "Avellaneda 2235, Villa Ballester, San Martín, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-139",
+      "nombre": "CORDES ROBERTO S.A. (Titanio)",
+      "ubicacion": "PALPA 3551, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-140",
+      "nombre": "Diquime S.A. (Titanio)",
+      "ubicacion": "Ministro Francisco Cocchiararo 5305, Caseros, Tres de Febrero, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-141",
+      "nombre": "Ladema SRL (Titanio)",
+      "ubicacion": "Murguiondo 2755, Lanús Oeste, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-142",
+      "nombre": "VL IMPLANTS (TITANIO)",
+      "ubicacion": "San Roque 4545, Ciudadela, Tres de Febrero, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-143",
+      "nombre": "Voestalpine High Performance Metals Argentina S.A. (Titanio)",
+      "ubicacion": "Mozart 1935, Garín, Escobar, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-144",
+      "nombre": "WALVOSS (Titanio)",
+      "ubicacion": "Humberto 1º 1333, CABA, Buenos Aires",
+      "tipo": "fabrica"
+    },
+    {
+      "id": "prv-145",
+      "nombre": "AXMEC",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-146",
+      "nombre": "BIOMEDICI",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-147",
+      "nombre": "BIOPROTECE",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-148",
+      "nombre": "BIOVAND",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-149",
+      "nombre": "BIOX",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-150",
+      "nombre": "CIRUGIA CENTRO",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-151",
+      "nombre": "Corpomedica",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-152",
+      "nombre": "Crosmed",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-153",
+      "nombre": "DANTE HEXAST",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-154",
+      "nombre": "ENDOIMPLANTES",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-155",
+      "nombre": "FIXAMO",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-156",
+      "nombre": "HEXAST",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-157",
+      "nombre": "HUMAN BALANCE",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-158",
+      "nombre": "IDEAR",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-159",
+      "nombre": "IMATION",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-160",
+      "nombre": "IMATIONTY",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-161",
+      "nombre": "IMECO",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-162",
+      "nombre": "IMPLANMED",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-163",
+      "nombre": "IMPLANSUR",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-164",
+      "nombre": "IP MAGNA",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-165",
+      "nombre": "JULIO MOREYRA",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-166",
+      "nombre": "KINEMIN",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-167",
+      "nombre": "KINETICAL",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-168",
+      "nombre": "KOBRYNIEC",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-169",
+      "nombre": "Lesmaher S.A.",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-170",
+      "nombre": "MAT",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-171",
+      "nombre": "MATRITEC",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-172",
+      "nombre": "MC IMPLANTES TANDIL",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-173",
+      "nombre": "MICROMED",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-174",
+      "nombre": "MOREYRA",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-175",
+      "nombre": "NECOD",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-176",
+      "nombre": "Novax DMA S.A.",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-177",
+      "nombre": "OLIMPIA",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-178",
+      "nombre": "Osteolife S.R.L.",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-179",
+      "nombre": "ROS MEDICAL",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-180",
+      "nombre": "Sist. Med. Glo",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-181",
+      "nombre": "SUBITON",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-182",
+      "nombre": "Surgical Supply",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-183",
+      "nombre": "TDM GROUP S. A.",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-184",
+      "nombre": "TOTAL BONE",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-185",
+      "nombre": "Villalba",
+      "ubicacion": "",
+      "tipo": "cx"
+    },
+    {
+      "id": "prv-186",
+      "nombre": "ASISTENCIA SANITARIA INTEGRAL S.A.",
+      "ubicacion": "AV SAN MARTIN 2119 Piso:0 Dpto:0, Caseros, Buenos Aires",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-187",
+      "nombre": "ASSISTENCIAL SALUD SA",
+      "ubicacion": "Reconquista 954 4to Piso, Buenos Aires, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-188",
+      "nombre": "BONMED SA",
+      "ubicacion": "Florida 556, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-189",
+      "nombre": "Circulo Medico de La Matanza",
+      "ubicacion": "Av. de Mayo 743, Ramos Mejia, Buenos Aires",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-190",
+      "nombre": "Cirugia Alemana Ins. Médicos S.A.",
+      "ubicacion": "Velez Sarfield 85, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-191",
+      "nombre": "Corte Suprema de Justicia O.S. del Poder Judicial",
+      "ubicacion": "Lavalle 1653, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-192",
+      "nombre": "GRUPO MEDICO INCAS S.A.",
+      "ubicacion": "AZOPARDO 1405 PISO: 7, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-193",
+      "nombre": "I Salud S.R.L.",
+      "ubicacion": "Alsina 756 Piso 9º C, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-194",
+      "nombre": "Iter Medicina S.A.",
+      "ubicacion": "Av. Corrientes 1675, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-195",
+      "nombre": "La Segunda Aseguradora de Riesgos de trabajo S.A.",
+      "ubicacion": "Juan Manuel de Rosad 857, Rosario, Santa Fe",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-196",
+      "nombre": "MEDICAL SERVICIOS DE SALUD",
+      "ubicacion": "MAIPU 942 Piso:20 Dpto:IZQ, Buenos Aires, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-197",
+      "nombre": "Medicals Org. de Prestaciones Medicas Priv. S.A.",
+      "ubicacion": "Talcahuano 750 Piso 10, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-198",
+      "nombre": "MEDICPROTECT S.R.L.",
+      "ubicacion": "Carlos Pellegrini 713 Piso 10, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-199",
+      "nombre": "MEMED S.A.",
+      "ubicacion": "Olazabal 490, Ituzaingo, Buenos Aires",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-200",
+      "nombre": "Mutual de Trabajadores de Destreza Criolla Rep. Arg.",
+      "ubicacion": "Av. Pueyrredon 480 Piso 6º Of. 42, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-201",
+      "nombre": "O. S. de Emp y Pers Jerarq. de la Act.del Neum.Arg (OSEPJANA)",
+      "ubicacion": "Av San Martin 2868, Caseros, Buenos Aires",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-202",
+      "nombre": "O. S. DEL P. JERARQUICO DE LA R. ARG. PARA EL P. JER. DEL AGUA Y ENERGIA Y EL P. JER. DE LA IND. GR (OSJERA)",
+      "ubicacion": "MORENO 1140 PISO: 2, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-203",
+      "nombre": "O.S. de la Actividad de Seguros y Reaseguros (OSSEG)",
+      "ubicacion": "Carlos Pelegrini 575, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-204",
+      "nombre": "O.S. de la Sanidad Luis Pasteur",
+      "ubicacion": "Callao 764, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-205",
+      "nombre": "O.S. de los Empleados de Comercio y Actividades Civiles (OSECAC)",
+      "ubicacion": "Moreno 648, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-206",
+      "nombre": "O.S. de Petroleros - OSPe",
+      "ubicacion": "Av. Leandro N. Alem 690 1º Pso, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-207",
+      "nombre": "O.S. del Organismo de Control Externo (OSPOCE)",
+      "ubicacion": "Bartolomé Mitre 1523, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-208",
+      "nombre": "O.S. del Personal de Entidades Deportivas y Civiles (OSPEDYC)",
+      "ubicacion": "Matheu 631, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-209",
+      "nombre": "O.S. del Personal de la Industria de la Alimentación (OSPIA)",
+      "ubicacion": "Venezuela 1326, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-210",
+      "nombre": "O.S. del Personal de la Industria del Cuero y Afines (OSPICA)",
+      "ubicacion": "H. Irigoyen 628, Pineyro, Buenos Aires",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-211",
+      "nombre": "O.S. del Personal de la Industria del Vidrio (OSPIV)",
+      "ubicacion": "Balbastro 455, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-212",
+      "nombre": "O.S. del Personal de Panaderías",
+      "ubicacion": "Av. Boedo 168, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-213",
+      "nombre": "O.S. del Personal Grafico",
+      "ubicacion": "Venezuela 2443, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-214",
+      "nombre": "O.S. del Personal Municipal de La Matanza",
+      "ubicacion": "Almafuerte 3160, San Justo, Buenos Aires",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-215",
+      "nombre": "O.S. Fedecamaras",
+      "ubicacion": "Av. Rivadavia 7055 1º Piso, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-216",
+      "nombre": "O.S. TRABAJADORES PASTELEROS, CONFITEROS, PIZZEROS, HELADEROS Y ALFAJOREROS DE LA REPUBLICA",
+      "ubicacion": "Sarmiento 4446, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-217",
+      "nombre": "O.S.F.A.T.L.y F. OBRA SOCIAL DE LA FEDERACION ARGENTINA DE TRABAJADORES DE LUZ Y FUERZA",
+      "ubicacion": "Alsina 1131, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-218",
+      "nombre": "OBRA SOCIAL ASOCIACION MUTUAL DE LOS OBREROS CATOLICOS PADRE FEDERICO GROTE (OSAMOC)",
+      "ubicacion": "BILLINGHURST 1669 Piso:2, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-219",
+      "nombre": "OBRA SOCIAL CONDUCTORES DE TRANSPORTE COLECTIVO DE PASAJEROS (UTA)",
+      "ubicacion": "MORENO 2969, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-220",
+      "nombre": "OBRA SOCIAL DE LA ASOCIACION DE TECNICOS DEL FUTBOL ARGENTINO",
+      "ubicacion": "VIAMONTE 1328 Piso:01 Dpto:013, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-221",
+      "nombre": "OBRA SOCIAL DE LA FEDERACION ARGENTINA DEL TRABAJADOR DE LAS UNIVERSIDADES NACIONALES (OSFATUM)",
+      "ubicacion": "YRIGOYEN HIPOLITO 3656, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-222",
+      "nombre": "OBRA SOCIAL DE LOS SUPERVISORES DE LA INDUSTRIA METALMECANICA DE LA REPUBLICA ARGENTINA (OSSIMRA)",
+      "ubicacion": "Paseo Colon 823, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-223",
+      "nombre": "Obra Social del Personal de Fabricas de Pintura (OSPFP)",
+      "ubicacion": "NAZCA AV. 845 Piso:PB, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-224",
+      "nombre": "OBRA SOCIAL DEL PERSONAL DE LA INDUSTRIA LECHERA (OSPIL)",
+      "ubicacion": "YRIGOYEN HIPOLITO 4056, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-225",
+      "nombre": "OBRA SOCIAL DEL PERSONAL DE LA INDUSTRIADE FIBROCEMENTO (OSPIF)",
+      "ubicacion": "CONSTITUCION 3674, San Justo, Buenos Aires",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-226",
+      "nombre": "Obra Social del Personal de Television",
+      "ubicacion": "BOCAYUVA QUINTINO 50, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-227",
+      "nombre": "OBRA SOCIAL DEL PERSONAL MARITIMO",
+      "ubicacion": "REP. BOLIVARIANA DE VENEZUELA 1427, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-228",
+      "nombre": "OBRA SOCIAL DEL PERSONAL MOSAISTA",
+      "ubicacion": "QUIRNO 89, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-229",
+      "nombre": "OBRA SOCIAL DEL PERSONAL RURAL Y ESTIBADORES DE LA REPUBLICA ARGENTINA OSPRERA",
+      "ubicacion": "Reconquista 630, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-230",
+      "nombre": "OBRA SOCIAL, DE OBREROS Y EMPLEADOS TINTOREROS, SOMBREREROS Y LAVADEROS DE LA REPUBLICA ARGENTINA",
+      "ubicacion": "CULPINA 31, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-231",
+      "nombre": "PEQUEÑA OBRA DE LA DIVINA PROVIDENCIA (OPDEA)",
+      "ubicacion": "PELLEGRINI CARLOS 1441, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-232",
+      "nombre": "QUORE SALUD OCUPACIONAL S.A",
+      "ubicacion": "YRIGOYEN HIPOLITO 710, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-233",
+      "nombre": "ROI S.A.",
+      "ubicacion": "Reconquista 1016 Piso 9, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-234",
+      "nombre": "SALUD INTEGRAL MEPLIFE S.R.L.",
+      "ubicacion": "LM Alem 598, San Miguel De Tucuma, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-235",
+      "nombre": "Sistemas Privados de Salud, SA",
+      "ubicacion": "3 de febrero 518, Ramos Mejia, Buenos Aires",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-236",
+      "nombre": "Suizo Argentina S.A.",
+      "ubicacion": "Monroe 801, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-237",
+      "nombre": "Salud Prof y Tecnologia",
+      "ubicacion": "Sarmiento 776 6B, Buenos Aires",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-238",
+      "nombre": "Siprotec",
+      "ubicacion": "J Diaz de Solis 1860, Vicente Lopez, Buenos Aires",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-239",
+      "nombre": "ACA Avalain",
+      "ubicacion": "Combate de los Pozos 220, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-240",
+      "nombre": "Drogueria Betapharma",
+      "ubicacion": "Coronel Perin 3611, Ciudadela, Buenos Aires",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-241",
+      "nombre": "C&C Medicals",
+      "ubicacion": "San Blas 1859, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-242",
+      "nombre": "Corporación Asistencial",
+      "ubicacion": "R Carrillo 2157, San Martin, Buenos Aires",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-243",
+      "nombre": "Grupo MP Salud",
+      "ubicacion": "A M de Justo 1930, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-244",
+      "nombre": "Grupo DDM",
+      "ubicacion": "Juhin 1596, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-245",
+      "nombre": "OS Plastico",
+      "ubicacion": "Av Pavon 4175, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-246",
+      "nombre": "OS Farmacia",
+      "ubicacion": "Constitucion 2066, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-247",
+      "nombre": "Proram Master Far",
+      "ubicacion": "Alsina 714, Avellaneda",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-248",
+      "nombre": "OS Locutores",
+      "ubicacion": "Vidt 2011, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-249",
+      "nombre": "M y C Salud",
+      "ubicacion": "Maipu 340, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-250",
+      "nombre": "Ortopedia Berhat",
+      "ubicacion": "Sanabria 1955, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-251",
+      "nombre": "OSDEPYM",
+      "ubicacion": "Reconquista 453, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-252",
+      "nombre": "OSPERYH",
+      "ubicacion": "Sarmiento 2040, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-253",
+      "nombre": "Prima",
+      "ubicacion": "Av Belgrano 2264, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-254",
+      "nombre": "S&I Group",
+      "ubicacion": "Sanabria 3353, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-255",
+      "nombre": "Master MEdical",
+      "ubicacion": "Jujuy 1784, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-256",
+      "nombre": "Techobiology",
+      "ubicacion": "Mexico 1173, CABA, Capital Federal",
+      "tipo": "cliente"
+    },
+    {
+      "id": "prv-257",
+      "nombre": "INTI",
+      "ubicacion": "Av. Gral. Paz 5445, CABA, San Martín",
+      "tipo": "cliente"
+    }
+  ]
+};
+
+/* Nombres de los placeholders de ejemplo que trae defaultData() sin editar. */
+const MAESTRO_PLACEHOLDER_NOMBRES = ["Hospital Central","Correo Argentino - Sucursal","Centro de Esterilización","Proveedor / Cliente Ejemplo"];
+/* Un maestro se considera "vacío" (listo para recibir el seed) si no tiene
+   registros, o si el único registro que tiene es el placeholder de ejemplo
+   sin editar (ubicacion vacía). Así nunca se pisa un maestro ya cargado a mano. */
+function maestroEstaVacio(lista){
+  if(!Array.isArray(lista) || lista.length === 0) return true;
+  if(lista.length === 1 && MAESTRO_PLACEHOLDER_NOMBRES.includes(lista[0].nombre) && !lista[0].ubicacion) return true;
+  return false;
+}
+function aplicarSeedMaestrosSiCorresponde(){
+  let seeded = false;
+  ["salud","encomiendas","esterilizadoras","proveedores"].forEach(cat=>{
+    if(maestroEstaVacio(DATA.maestros[cat]) && MAESTROS_SEED[cat] && MAESTROS_SEED[cat].length){
+      DATA.maestros[cat] = MAESTROS_SEED[cat].map(m=>({ ...m }));
+      seeded = true;
+    }
+  });
+  return seeded;
+}
+
 function defaultData(){
   return {
     maestros: {
@@ -1059,6 +3434,9 @@ async function cargarInicial(){
     try{ await fbSet(FB_PATH, payload); setSyncStatus("En vivo","sync-ok"); }
     catch(e){ setSyncStatus("Sin conexión","sync-error"); }
   }
+  if(aplicarSeedMaestrosSiCorresponde()){
+    persistir();
+  }
   document.getElementById("metaAprobacion").value = DATA.metaAprobacion || "";
   document.getElementById("metaVigor").value = DATA.metaVigor || "";
   renderMaestros();
@@ -1066,9 +3444,18 @@ async function cargarInicial(){
   verificarTodosMaestrosInicial();
 }
 
-/* Verifica, al cargar la página, las direcciones ya guardadas que todavía
-   no tengan coordenadas en caché (una consulta cada ~350ms para no saturar
-   el servicio gratuito de geocodificación). */
+/* Verifica, para una categoría del maestro, las direcciones que todavía no
+   tengan coordenadas en caché (una consulta cada ~350ms para no saturar el
+   servicio gratuito de geocodificación). Se usa tanto al cargar la página
+   como después de importar centros nuevos. */
+async function verificarMaestrosPendientes(cat){
+  for(const m of DATA.maestros[cat]){
+    if(m.ubicacion && m.ubicacion.trim() && m._lat == null){
+      await verificarUbicacionMaestro(cat, m.id);
+      await new Promise(res=>setTimeout(res, 350));
+    }
+  }
+}
 async function verificarTodosMaestrosInicial(){
   if(DATA.biotrom.ubicacion && DATA.biotrom.ubicacion.trim() && DATA.biotrom._lat == null){
     await verificarUbicacionMaestro("biotrom", DATA.biotrom.id);
@@ -1076,12 +3463,7 @@ async function verificarTodosMaestrosInicial(){
   }
   const cats = ["salud","encomiendas","esterilizadoras","proveedores"];
   for(const cat of cats){
-    for(const m of DATA.maestros[cat]){
-      if(m.ubicacion && m.ubicacion.trim() && m._lat == null){
-        await verificarUbicacionMaestro(cat, m.id);
-        await new Promise(res=>setTimeout(res, 350));
-      }
-    }
+    await verificarMaestrosPendientes(cat);
   }
 }
 
@@ -1114,7 +3496,7 @@ setInterval(async ()=>{
   }catch(e){
     setSyncStatus("Sin conexión","sync-error");
   }
-}, 10000);
+}, 30000);
 
 /* ============================================================
    AUTOGROW TEXTAREAS
@@ -1354,12 +3736,15 @@ function renderMaestros(){
   document.querySelectorAll('#maestros .btn-add-row[data-cat]').forEach(btn=>{
     btn.style.display = editable ? "" : "none";
   });
+  const btnImportar = document.getElementById("btnImportarCentrosSalud");
+  if(btnImportar) btnImportar.parentElement.style.display = editable ? "" : "none";
   renderBiotromRow();
   renderMaestroTabla("salud","tbodySalud");
   renderMaestroTabla("encomiendas","tbodyEncomiendas");
   renderMaestroTabla("esterilizadoras","tbodyEsterilizadoras");
   renderMaestroTabla("proveedores","tbodyProveedores");
   aplicarFiltroMaestros();
+  renderMaestroSubSwitch();
 }
 function geoStatusHtml(m){
   if(m._geoOk === true || (m._geoOk == null && m._lat != null && m._lng != null)){
@@ -1386,11 +3771,26 @@ function renderBiotromRow(){
     </tr>
   `;
 }
+const TIPO_PROVEEDOR_OPTS = [
+  { v:"fabrica", l:"Fábrica", cls:"tipo-fabrica" },
+  { v:"cx",      l:"CX",      cls:"tipo-cx" },
+  { v:"cliente", l:"Cliente", cls:"tipo-cliente" }
+];
+function tipoProveedorSelectHtml(m, ro){
+  const cur = TIPO_PROVEEDOR_OPTS.find(o=>o.v===m.tipo) || TIPO_PROVEEDOR_OPTS[0];
+  const opts = TIPO_PROVEEDOR_OPTS.map(o=>`<option value="${o.v}" ${o.v===cur.v?"selected":""}>${o.l}</option>`).join("");
+  return `<select class="tipo-sel ${cur.cls}" data-field="tipo" onchange="colorSelTipo(this)" ${ro}>${opts}</select>`;
+}
+function colorSelTipo(s){
+  const opt = TIPO_PROVEEDOR_OPTS.find(o=>o.v===s.value) || TIPO_PROVEEDOR_OPTS[0];
+  s.className = `tipo-sel ${opt.cls}`;
+}
 function renderMaestroTabla(cat, tbodyId){
   const tbody = document.getElementById(tbodyId);
   const lista = DATA.maestros[cat];
+  const conTipo = cat === "proveedores";
   if(lista.length === 0){
-    tbody.innerHTML = '<tr><td colspan="4" class="empty-hint">Sin registros.</td></tr>';
+    tbody.innerHTML = `<tr><td colspan="${conTipo?5:4}" class="empty-hint">Sin registros.</td></tr>`;
     return;
   }
   const editable = maestrosEditable();
@@ -1408,6 +3808,7 @@ function renderMaestroTabla(cat, tbodyId){
           ${badgeCarga(m)}
         </div>
       </td>
+      ${conTipo ? `<td>${tipoProveedorSelectHtml(m, editable ? "" : "disabled")}</td>` : ""}
       <td class="no-print" style="text-align:center;">${editable ? '<button class="btn-del-row" data-action="del-maestro">×</button>' : ''}</td>
     </tr>
   `;
@@ -1428,6 +3829,7 @@ function buscarDireccionDuplicada(direccionNueva, excluirCat, excluirId){
   ];
   return candidatos.find(c => !(c.cat===excluirCat && c.id===excluirId) && normalizarDireccion(c.ubicacion) === dirNorm) || null;
 }
+let maestroTipoFiltro = "todos"; // filtro activo en Proveedores y Clientes: "todos" | "fabrica" | "cx" | "cliente"
 function aplicarFiltroMaestros(){
   const input = document.getElementById("maestrosSearch");
   const q = input ? input.value.trim().toUpperCase() : "";
@@ -1435,12 +3837,22 @@ function aplicarFiltroMaestros(){
     (DATA.maestros[cat]||[]).forEach(m=>{
       const tr = document.querySelector(`#maestros tr[data-cat="${cat}"][data-id="${m.id}"]`);
       if(!tr) return;
-      const match = !q || (m.nombre||"").toUpperCase().includes(q) || (m.ubicacion||"").toUpperCase().includes(q);
-      tr.style.display = match ? "" : "none";
+      const matchTexto = !q || (m.nombre||"").toUpperCase().includes(q) || (m.ubicacion||"").toUpperCase().includes(q);
+      const matchTipo = cat !== "proveedores" || maestroTipoFiltro === "todos" || (m.tipo||"fabrica") === maestroTipoFiltro;
+      tr.style.display = (matchTexto && matchTipo) ? "" : "none";
     });
   });
 }
 document.getElementById("maestrosSearch").addEventListener("input", aplicarFiltroMaestros);
+document.getElementById("tipoFiltroBar").addEventListener("click", e=>{
+  const btn = e.target.closest(".tipo-filtro-btn");
+  if(!btn) return;
+  maestroTipoFiltro = btn.getAttribute("data-tipo-filtro");
+  document.querySelectorAll("#tipoFiltroBar .tipo-filtro-btn").forEach(b=>{
+    b.classList.toggle("active", b === btn);
+  });
+  aplicarFiltroMaestros();
+});
 function escAttr(s){ return (s==null?"":String(s)).replace(/"/g,"&quot;"); }
 
 document.querySelectorAll(".btn-add-row[data-cat]").forEach(btn=>{
@@ -1448,12 +3860,41 @@ document.querySelectorAll(".btn-add-row[data-cat]").forEach(btn=>{
     if(!maestrosEditable()) return;
     const cat = btn.getAttribute("data-cat");
     const nuevo = { id: uid(), nombre:"", ubicacion:"" };
+    if(cat === "proveedores") nuevo.tipo = "fabrica";
     marcarCarga(nuevo);
     DATA.maestros[cat].push(nuevo);
     renderMaestros();
     persistir();
   });
 });
+
+function normalizarNombreCentro(s){
+  return (s||"").toString().toUpperCase().trim()
+    .replace(/[ÁÀÄÂ]/g,"A").replace(/[ÉÈËÊ]/g,"E").replace(/[ÍÌÏÎ]/g,"I")
+    .replace(/[ÓÒÖÔ]/g,"O").replace(/[ÚÙÜÛ]/g,"U").replace(/Ñ/g,"N")
+    .replace(/[.,°ºª]/g,"").replace(/\s+/g," ");
+}
+function importarCentrosSalud(){
+  if(!maestrosEditable()) return;
+  const existentes = new Set(DATA.maestros.salud.map(m=>normalizarNombreCentro(m.nombre)));
+  let agregados = 0;
+  IMPORT_CENTROS_SALUD.forEach(c=>{
+    const key = normalizarNombreCentro(c.nombre);
+    if(existentes.has(key)) return;
+    const nuevo = { id: uid(), nombre: c.nombre, ubicacion: c.ubicacion };
+    marcarCarga(nuevo);
+    DATA.maestros.salud.push(nuevo);
+    existentes.add(key);
+    agregados++;
+  });
+  renderMaestros();
+  persistir();
+  if(agregados > 0) verificarMaestrosPendientes("salud"); // ubica en el mapa (✓) los recién agregados, uno por uno en segundo plano
+  alert(agregados > 0
+    ? `Se importaron ${agregados} centro(s) de salud nuevo(s). Las tildes de ubicación van a ir apareciendo en unos segundos.`
+    : "No hay centros nuevos para importar: todos los de la migración ya estaban cargados.");
+}
+document.getElementById("btnImportarCentrosSalud").addEventListener("click", importarCentrosSalud);
 
 document.getElementById("maestros").addEventListener("focusin", e=>{
   if(e.target.getAttribute && e.target.getAttribute("data-field") === "ubicacion"){
@@ -1515,7 +3956,7 @@ document.getElementById("maestros").addEventListener("click", e=>{
    Nivel 2 (categoría): buscador + lista alfabética de ese maestro
    Nivel 3 (Otro): campo de texto libre
 ============================================================ */
-let pickerUI = { openKey: null, vista: "root", busqueda: "", focoManual: false };
+let pickerUI = { openKey: null, vista: "root", busqueda: "", focoManual: false, tipoProveedor: null };
 function pickerKey(mvId, cual){ return mvId + "_" + cual; }
 
 function renderPuntoPicker(mv, cual){
@@ -1559,14 +4000,24 @@ function renderPickerPanel(mv, cual){
       </div>
     `;
   }
+  if(pickerUI.vista === "proveedores" && !pickerUI.tipoProveedor){
+    return `
+      <div class="picker-panel no-print">
+        <div class="picker-back" data-action="picker-back">← Volver</div>
+        ${TIPO_PROVEEDOR_OPTS.map(o=>`<div class="picker-item" data-action="pick-tipo-proveedor" data-tipo="${o.v}">${o.l}</div>`).join("")}
+      </div>
+    `;
+  }
   const cat = pickerUI.vista;
   const q = pickerUI.busqueda.trim().toUpperCase();
   const lista = [...DATA.maestros[cat]]
+    .filter(m => cat !== "proveedores" || (m.tipo||"fabrica") === pickerUI.tipoProveedor)
     .filter(m => !q || (m.nombre||"").toUpperCase().includes(q) || (m.ubicacion||"").toUpperCase().includes(q))
     .sort((a,b) => (a.nombre||"").localeCompare(b.nombre||"", "es"));
   return `
     <div class="picker-panel no-print">
       <div class="picker-back" data-action="picker-back">← Volver</div>
+      ${cat === "proveedores" ? `<div class="picker-tipo-activo">${(TIPO_PROVEEDOR_OPTS.find(o=>o.v===pickerUI.tipoProveedor)||{}).l||""}</div>` : ""}
       <input type="text" class="picker-search" placeholder="Buscar..." value="${escAttr(pickerUI.busqueda)}">
       <div class="picker-list">
         ${lista.length===0 ? '<div class="picker-empty">Sin resultados</div>' :
@@ -1898,6 +4349,7 @@ diasContainer.addEventListener("click", e=>{
     pickerUI.vista = "root";
     pickerUI.busqueda = "";
     pickerUI.focoManual = false;
+    pickerUI.tipoProveedor = null;
     renderDias();
     return;
   }
@@ -1918,6 +4370,14 @@ diasContainer.addEventListener("click", e=>{
   }
   if(action === "pick-cat" && cual){
     pickerUI.vista = e.target.getAttribute("data-cat");
+    pickerUI.busqueda = "";
+    pickerUI.focoManual = false;
+    pickerUI.tipoProveedor = null;
+    renderDias();
+    return;
+  }
+  if(action === "pick-tipo-proveedor" && cual){
+    pickerUI.tipoProveedor = e.target.getAttribute("data-tipo");
     pickerUI.busqueda = "";
     pickerUI.focoManual = false;
     renderDias();
@@ -1946,9 +4406,17 @@ diasContainer.addEventListener("click", e=>{
     return;
   }
   if(action === "picker-back"){
+    if(pickerUI.vista === "proveedores" && pickerUI.tipoProveedor){
+      pickerUI.tipoProveedor = null;
+      pickerUI.busqueda = "";
+      pickerUI.focoManual = false;
+      renderDias();
+      return;
+    }
     pickerUI.vista = "root";
     pickerUI.busqueda = "";
     pickerUI.focoManual = false;
+    pickerUI.tipoProveedor = null;
     renderDias();
     return;
   }
@@ -2477,6 +4945,25 @@ document.getElementById("pagosSubTabs").addEventListener("click", e=>{
   if(!btn) return;
   pagosSubActual = btn.getAttribute("data-sub");
   renderPagosSubSwitch();
+});
+
+/* Switch de subhoja: Centros de Salud / Encomiendas / Esterilizadoras / Proveedores y Clientes */
+const MAESTRO_SUBS = ["salud","encomiendas","esterilizadoras","proveedores"];
+const MAESTRO_SUB_IDS = { salud:"maestroSubSalud", encomiendas:"maestroSubEncomiendas", esterilizadoras:"maestroSubEsterilizadoras", proveedores:"maestroSubProveedores" };
+function renderMaestroSubSwitch(){
+  const wrap = document.getElementById("maestrosSubTabs");
+  wrap.querySelectorAll(".maestro-subtab-btn").forEach(btn=>{
+    btn.classList.toggle("active", btn.getAttribute("data-sub") === maestroSubActual);
+  });
+  MAESTRO_SUBS.forEach(sub=>{
+    document.getElementById(MAESTRO_SUB_IDS[sub]).classList.toggle("active", sub === maestroSubActual);
+  });
+}
+document.getElementById("maestrosSubTabs").addEventListener("click", e=>{
+  const btn = e.target.closest(".maestro-subtab-btn");
+  if(!btn) return;
+  maestroSubActual = btn.getAttribute("data-sub");
+  renderMaestroSubSwitch();
 });
 
 /* Datos base por día (km, gastos, horas extra, costos) de la persona activa,
