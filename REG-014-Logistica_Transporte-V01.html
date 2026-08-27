@@ -8,6 +8,8 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
@@ -988,13 +990,42 @@ const FB_PATH = "/reg014";
 const LS_KEY = "REG014_v1";
 let lastTs = 0;
 
+/* ── FIREBASE AUTH (anónimo) ─────────────────────────────── */
+const firebaseConfig = {
+  apiKey: "AIzaSyAIMGOPszFGS29hlLCdhD6woff-U6RrvNA",
+  authDomain: "sgc2-72ddb.firebaseapp.com",
+  databaseURL: "https://sgc2-72ddb-default-rtdb.firebaseio.com",
+  projectId: "sgc2-72ddb",
+  storageBucket: "sgc2-72ddb.firebasestorage.app",
+  messagingSenderId: "888988125222",
+  appId: "1:888988125222:web:8caf83fb73482e6c09bee7"
+};
+firebase.initializeApp(firebaseConfig);
+
+let _authReadyPromise = null;
+function ensureSignedIn(){
+  if(!_authReadyPromise){
+    _authReadyPromise = new Promise((resolve, reject)=>{
+      firebase.auth().onAuthStateChanged(user=>{ if(user) resolve(user); });
+      firebase.auth().signInAnonymously().catch(reject);
+    });
+  }
+  return _authReadyPromise;
+}
+async function getAuthToken(){
+  await ensureSignedIn();
+  return firebase.auth().currentUser.getIdToken();
+}
+
 async function fbGet(path){
-  const r = await fetch(FB_URL + path + ".json");
+  const token = await getAuthToken();
+  const r = await fetch(FB_URL + path + ".json?auth=" + token);
   if(!r.ok) throw new Error(r.status);
   return r.json();
 }
 async function fbSet(path, data){
-  const r = await fetch(FB_URL + path + ".json", {
+  const token = await getAuthToken();
+  const r = await fetch(FB_URL + path + ".json?auth=" + token, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data)
