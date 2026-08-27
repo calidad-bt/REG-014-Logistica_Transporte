@@ -267,6 +267,7 @@ textarea.cta{resize:none; overflow:hidden; min-height:36px; font-family:var(--fo
 .he-auto{font-family:var(--mono); font-size:11px; color:var(--text-2);}
 .chk-wrap{display:flex; align-items:center; gap:5px; font-size:11px; color:var(--text-2); font-weight:600;}
 .tot-badge{font-family:var(--mono); font-weight:700; font-size:12px; color:var(--accent-d);}
+.dia-sticky-total{display:none;}
 .dia-header .spacer{flex:1;}
 .dia-body{padding:10px 12px 12px;}
 .obs-wrap{margin-top:10px;}
@@ -536,22 +537,22 @@ tr.drag-over td{background:var(--accent-l); border-top:2px solid var(--accent);}
   table.mobile-cards .gastos-cell{min-width:0; width:100%;}
 
   /* Fila de Km: numero centrado y botones de al lado (recalcular,
-     Google Maps, comparar rutas) mas grandes para tocar bien desde el celular. */
+     Google Maps, comparar rutas) en el tamaño estándar de toque (30px). */
   table.mobile-cards .km-row{
-    flex-wrap:wrap; justify-content:center; align-items:center; gap:8px !important;
+    flex-wrap:wrap; justify-content:center; align-items:center; gap:7px !important;
   }
   table.mobile-cards .km-row input{
     min-width:0 !important; flex:1 1 90px !important;
-    text-align:center !important; font-size:18px !important; font-weight:600;
-    height:38px; padding:8px 6px !important;
+    text-align:center !important; font-size:16px !important; font-weight:600;
+    height:33px; padding:6px !important;
   }
   table.mobile-cards .km-row button,
   table.mobile-cards .km-row a{
-    height:36px !important; width:36px !important; padding:0 !important;
-    font-size:16px !important; flex-shrink:0;
+    height:30px !important; width:30px !important; padding:0 !important;
+    font-size:15px !important; flex-shrink:0;
   }
-  table.mobile-cards .km-row svg{width:19px; height:19px;}
-  table.mobile-cards .km-row .km-status{font-size:17px;}
+  table.mobile-cards .km-row svg{width:16px; height:16px;}
+  table.mobile-cards .km-row .km-status{font-size:15px;}
 
   /* Foto de comprobante en Gastos Extra: mas grande y mas separada del
      boton de eliminar, para que no se borre sin querer al tocar cerca. */
@@ -559,7 +560,33 @@ tr.drag-over td{background:var(--accent-l); border-top:2px solid var(--accent);}
   table.mobile-cards .gasto-chip .thumb-del{
     width:23px; height:23px; font-size:14px; top:-9px; right:-9px;
   }
-  table.mobile-cards .gasto-chip label.filebtn{width:34px; height:34px;}
+
+  /* Estandar de botones-icono sueltos (30x30) en toda la app: cámara de
+     gastos, ajustar ubicación en Maestros, y los "×" de eliminar que
+     habían quedado chicos (gasto / fila de Maestros / usuario). */
+  .gasto-chip label.filebtn,
+  [data-action="ajustar-ubicacion"],
+  [data-action="del-maestro"],
+  [data-action="del-usuario"],
+  [data-action="del-gasto"]{
+    width:30px !important; height:30px !important; padding:0 !important;
+    font-size:15px !important;
+  }
+  .gasto-chip label.filebtn svg,
+  [data-action="ajustar-ubicacion"] svg{width:16px; height:16px;}
+
+  /* Franja sticky con Km y Gastos del día: queda pegada debajo del nav
+     mientras se scrollea la lista de movimientos, y se destraba sola al
+     pasar al día siguiente (position:sticky, sin JS). */
+  .dia-sticky-total{
+    display:flex; justify-content:center; gap:16px;
+    position:sticky; top:calc(var(--nav-h) + 6px); z-index:15;
+    background:var(--accent-l); border:1px solid var(--border); border-radius:var(--radius);
+    padding:6px 10px; margin-bottom:8px;
+  }
+  .dia-sticky-total .item{display:flex; align-items:baseline; gap:5px;}
+  .dia-sticky-total .lbl{font-size:9px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-2); font-weight:700;}
+  .dia-sticky-total .val{font-family:var(--mono); font-size:12px; font-weight:700; color:var(--accent-d);}
 
   /* Selector de Punto de Partida/Llegada -> hoja anclada abajo, ignora la
      posición calculada por JS (evita que el teclado virtual la tape). */
@@ -570,7 +597,6 @@ tr.drag-over td{background:var(--accent-l); border-top:2px solid var(--accent);}
   }
   .picker-list{max-height:45vh;}
   .picker-search, .picker-libre-input{font-size:16px;}
-  .punto-picker-btn{font-size:16px;}
   /* Evitar el zoom automático de iOS/Android al enfocar cualquier campo
      con letra menor a 16px en toda la app, no solo en el picker. */
   input, select, textarea{font-size:16px;}
@@ -4619,6 +4645,10 @@ function renderDiaGroup(dia){
       </div>
     </div>
     <div class="dia-body">
+      <div class="dia-sticky-total no-print">
+        <span class="item"><span class="lbl">Km</span><span class="val val-km">${tot.kmTotal.toFixed(1)} km</span></span>
+        <span class="item"><span class="lbl">Gastos</span><span class="val val-gastos">${formatARS(tot.gastoTotal)}</span></span>
+      </div>
       <button class="btn-add-row no-print" data-action="add-mov" style="margin-bottom:8px;">+ Agregar Movimiento</button>
       <div class="table-scroll mov-table-scroll">
         <table class="mobile-cards">
@@ -4970,6 +5000,8 @@ diasContainer.addEventListener("focusout", e=>{
       const totBadges = diaEl.querySelectorAll(".tot-badge");
       const tot = computeDiaTotals(dia);
       if(totBadges[1]) totBadges[1].textContent = formatARS(tot.gastoTotal);
+      const stickyGastos = diaEl.querySelector(".dia-sticky-total .val-gastos");
+      if(stickyGastos) stickyGastos.textContent = formatARS(tot.gastoTotal);
       persistir();
     }
   }
