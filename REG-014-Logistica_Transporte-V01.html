@@ -687,7 +687,7 @@ tr.drag-over td{background:var(--accent-l); border-top:2px solid var(--accent);}
           </div>
           <div class="meta-cell">
             <div class="meta-label">Versión</div>
-            <div class="meta-value">V01</div>
+            <div class="meta-value">V02</div>
           </div>
         </div>
       </div>
@@ -762,6 +762,15 @@ tr.drag-over td{background:var(--accent-l); border-top:2px solid var(--accent);}
           <table>
             <thead><tr><th>Nombre</th><th>Ubicación (dirección)</th></tr></thead>
             <tbody id="tbodyBiotrom"></tbody>
+          </table>
+        </div>
+
+        <div class="section-title">Puntos Fijos</div>
+        <button class="btn-add-row no-print" data-cat="puntosFijos" style="margin-bottom:12px;">+ Agregar punto fijo</button>
+        <div class="table-scroll" style="margin-bottom:26px;">
+          <table>
+            <thead><tr><th style="width:26px;"></th><th>Nombre</th><th>Ubicación (dirección)</th><th style="width:36px;" class="no-print"></th></tr></thead>
+            <tbody id="tbodyPuntosFijos"></tbody>
           </table>
         </div>
 
@@ -1099,7 +1108,7 @@ let pagosSubActual = "recorridos"; // subhoja activa en Pagos: "recorridos" o "e
 let maestroSubActual = "salud"; // subhoja activa en Maestros: "salud" | "encomiendas" | "esterilizadoras" | "proveedores"
 
 let DATA = {
-  maestros: { salud: [], encomiendas: [], esterilizadoras: [], proveedores: [] },
+  maestros: { salud: [], encomiendas: [], esterilizadoras: [], proveedores: [], puntosFijos: [] },
   movs: { leo: { dias: [] }, tito: { dias: [] } },
   biotrom: { ...BIOTROM_DEFAULT },
   metaAprobacion: "",
@@ -1171,6 +1180,7 @@ function normalizeData(d){
   d.maestros.esterilizadoras = Array.isArray(d.maestros.esterilizadoras) ? d.maestros.esterilizadoras
     : (Array.isArray(d.maestros.otros) ? d.maestros.otros : []); // migración desde la categoría vieja "otros"
   d.maestros.proveedores = Array.isArray(d.maestros.proveedores) ? d.maestros.proveedores : [];
+  d.maestros.puntosFijos = Array.isArray(d.maestros.puntosFijos) ? d.maestros.puntosFijos : [];
   delete d.maestros.otros;
   d.biotrom = (d.biotrom && typeof d.biotrom === "object") ? d.biotrom : { ...BIOTROM_DEFAULT };
   d.biotrom.id = BIOTROM_ID;
@@ -3547,7 +3557,8 @@ function defaultData(){
       salud: [ { id: uid(), nombre: "Hospital Central", ubicacion: "" } ],
       encomiendas: [ { id: uid(), nombre: "Correo Argentino - Sucursal", ubicacion: "" } ],
       esterilizadoras: [ { id: uid(), nombre: "Centro de Esterilización", ubicacion: "" } ],
-      proveedores: [ { id: uid(), nombre: "Proveedor / Cliente Ejemplo", ubicacion: "" } ]
+      proveedores: [ { id: uid(), nombre: "Proveedor / Cliente Ejemplo", ubicacion: "" } ],
+      puntosFijos: []
     },
     movs: { leo: { dias: [] }, tito: { dias: [] } },
     biotrom: { ...BIOTROM_DEFAULT },
@@ -3608,7 +3619,7 @@ async function verificarTodosMaestrosInicial(){
     await verificarUbicacionMaestro("biotrom", DATA.biotrom.id);
     await new Promise(res=>setTimeout(res, 350));
   }
-  const cats = ["salud","encomiendas","esterilizadoras","proveedores"];
+  const cats = ["puntosFijos","salud","encomiendas","esterilizadoras","proveedores"];
   for(const cat of cats){
     await verificarMaestrosPendientes(cat);
   }
@@ -3730,7 +3741,7 @@ function esMismoPunto(idNuevo, libreNuevo, idOtro, libreOtro){
 }
 function findMaestro(id){
   if(DATA.biotrom && id === DATA.biotrom.id) return DATA.biotrom;
-  const all = [...DATA.maestros.salud, ...DATA.maestros.encomiendas, ...DATA.maestros.esterilizadoras, ...DATA.maestros.proveedores];
+  const all = [...DATA.maestros.salud, ...DATA.maestros.encomiendas, ...DATA.maestros.esterilizadoras, ...DATA.maestros.proveedores, ...DATA.maestros.puntosFijos];
   return all.find(m => m.id === id) || null;
 }
 
@@ -4189,6 +4200,7 @@ function renderMaestros(){
   const btnImportar = document.getElementById("btnImportarCentrosSalud");
   if(btnImportar) btnImportar.parentElement.style.display = editable ? "" : "none";
   renderBiotromRow();
+  renderMaestroTabla("puntosFijos","tbodyPuntosFijos");
   renderMaestroTabla("salud","tbodySalud");
   renderMaestroTabla("encomiendas","tbodyEncomiendas");
   renderMaestroTabla("esterilizadoras","tbodyEsterilizadoras");
@@ -4283,7 +4295,8 @@ function buscarDireccionDuplicada(direccionNueva, excluirCat, excluirId){
     ...DATA.maestros.salud.map(m=>({cat:"salud", id:m.id, nombre:m.nombre, ubicacion:m.ubicacion})),
     ...DATA.maestros.encomiendas.map(m=>({cat:"encomiendas", id:m.id, nombre:m.nombre, ubicacion:m.ubicacion})),
     ...DATA.maestros.esterilizadoras.map(m=>({cat:"esterilizadoras", id:m.id, nombre:m.nombre, ubicacion:m.ubicacion})),
-    ...DATA.maestros.proveedores.map(m=>({cat:"proveedores", id:m.id, nombre:m.nombre, ubicacion:m.ubicacion}))
+    ...DATA.maestros.proveedores.map(m=>({cat:"proveedores", id:m.id, nombre:m.nombre, ubicacion:m.ubicacion})),
+    ...DATA.maestros.puntosFijos.map(m=>({cat:"puntosFijos", id:m.id, nombre:m.nombre, ubicacion:m.ubicacion}))
   ];
   return candidatos.find(c => !(c.cat===excluirCat && c.id===excluirId) && normalizarDireccion(c.ubicacion) === dirNorm) || null;
 }
@@ -4444,9 +4457,11 @@ function renderPuntoPicker(mv, cual){
 }
 function renderPickerPanel(mv, cual){
   if(pickerUI.vista === "root"){
+    const fijos = [...DATA.maestros.puntosFijos].sort((a,b)=>(a.nombre||"").localeCompare(b.nombre||"", "es"));
     return `
       <div class="picker-panel no-print">
         <div class="picker-item" data-action="pick-biotrom">Biotrom</div>
+        ${fijos.map(m=>`<div class="picker-item" data-action="pick-item" data-cat="puntosFijos" data-id="${m.id}">${escAttr(m.nombre||"(sin nombre)")}</div>`).join("")}
         <div class="picker-item" data-action="pick-cat" data-cat="salud">Centros de Salud</div>
         <div class="picker-item" data-action="pick-cat" data-cat="encomiendas">Encomiendas</div>
         <div class="picker-item" data-action="pick-cat" data-cat="esterilizadoras">Esterilizadoras</div>
