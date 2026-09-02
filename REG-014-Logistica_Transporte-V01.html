@@ -302,6 +302,7 @@ textarea.cta{resize:none; overflow:hidden; min-height:36px; font-family:var(--fo
 .picker-item:hover{background:var(--accent-l); color:var(--accent-d);}
 .picker-item-nombre{text-transform:uppercase;}
 .picker-item-libre{border-top:1px solid var(--border); margin-top:5px; padding-top:11px; color:var(--accent); font-weight:600;}
+.picker-item-clear{border-bottom:1px solid var(--border); margin-bottom:5px; padding-bottom:11px; color:var(--err-text); font-weight:600;}
 .picker-back{padding:6px 7px; font-size:12px; color:var(--accent); cursor:pointer; font-weight:600; display:block;}
 .picker-tipo-activo{padding:0 7px 6px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text-3);}
 .picker-back:hover{text-decoration:underline;}
@@ -997,6 +998,10 @@ tr.drag-over td{background:var(--accent-l); border-top:2px solid var(--accent);}
 const FB_URL = "https://sgc2-72ddb-default-rtdb.firebaseio.com";
 const FB_PATH = "/reg014";
 const LS_KEY = "REG014_v1";
+const LS_SESSION_KEY = "REG014_sesion";
+function guardarSesion(usuario){ try{ localStorage.setItem(LS_SESSION_KEY, usuario); }catch(e){} }
+function borrarSesion(){ try{ localStorage.removeItem(LS_SESSION_KEY); }catch(e){} }
+function leerSesion(){ try{ return localStorage.getItem(LS_SESSION_KEY); }catch(e){ return null; } }
 let lastTs = 0;
 
 /* ── FIREBASE AUTH (anónimo) ─────────────────────────────── */
@@ -4434,7 +4439,7 @@ document.getElementById("maestros").addEventListener("click", e=>{
    Nivel 2 (categoría): buscador + lista alfabética de ese maestro
    Nivel 3 (Otro): campo de texto libre
 ============================================================ */
-let pickerUI = { openKey: null, vista: "root", busqueda: "", focoManual: false, tipoProveedor: null };
+let pickerUI = { openKey: null, vista: "root", busqueda: "", libreTexto: "", focoManual: false, tipoProveedor: null };
 function pickerKey(mvId, cual){ return mvId + "_" + cual; }
 
 function renderPuntoPicker(mv, cual){
@@ -4458,8 +4463,10 @@ function renderPuntoPicker(mv, cual){
 function renderPickerPanel(mv, cual){
   if(pickerUI.vista === "root"){
     const fijos = [...DATA.maestros.puntosFijos].sort((a,b)=>(a.nombre||"").localeCompare(b.nombre||"", "es"));
+    const tieneValor = !!(mv[cual+"Id"] || (mv[cual+"Libre"] && mv[cual+"Libre"].trim()));
     return `
       <div class="picker-panel no-print">
+        ${tieneValor ? `<div class="picker-item picker-item-clear" data-action="clear-punto">Borrar selección</div>` : ""}
         <div class="picker-item" data-action="pick-biotrom">Biotrom</div>
         ${fijos.map(m=>`<div class="picker-item" data-action="pick-item" data-cat="puntosFijos" data-id="${m.id}">${escAttr(m.nombre||"(sin nombre)")}</div>`).join("")}
         <div class="picker-item" data-action="pick-cat" data-cat="salud">Centros de Salud</div>
@@ -4471,7 +4478,7 @@ function renderPickerPanel(mv, cual){
     `;
   }
   if(pickerUI.vista === "libre"){
-    const actual = mv[cual + "Libre"] || "";
+    const actual = pickerUI.libreTexto;
     return `
       <div class="picker-panel no-print">
         <div class="picker-back" data-action="picker-back">← Volver</div>
@@ -4836,6 +4843,7 @@ diasContainer.addEventListener("click", e=>{
     pickerUI.openKey = (pickerUI.openKey === key) ? null : key;
     pickerUI.vista = "root";
     pickerUI.busqueda = "";
+    pickerUI.libreTexto = "";
     pickerUI.focoManual = false;
     pickerUI.tipoProveedor = null;
     renderDias();
@@ -4856,9 +4864,20 @@ diasContainer.addEventListener("click", e=>{
     if(tienePunto(mv)) autoCalcularKm(mv, dia); else { renderDias(); persistir(); }
     return;
   }
+  if(action === "clear-punto" && mv && cual){
+    mv[cual+"Id"] = "";
+    mv[cual+"Libre"] = "";
+    pickerUI.openKey = null;
+    pickerUI.libreTexto = "";
+    marcarCarga(dia);
+    renderDias();
+    persistir();
+    return;
+  }
   if(action === "pick-cat" && cual){
     pickerUI.vista = e.target.getAttribute("data-cat");
     pickerUI.busqueda = "";
+    pickerUI.libreTexto = "";
     pickerUI.focoManual = false;
     pickerUI.tipoProveedor = null;
     renderDias();
@@ -4867,6 +4886,7 @@ diasContainer.addEventListener("click", e=>{
   if(action === "pick-tipo-proveedor" && cual){
     pickerUI.tipoProveedor = e.target.getAttribute("data-tipo");
     pickerUI.busqueda = "";
+    pickerUI.libreTexto = "";
     pickerUI.focoManual = false;
     renderDias();
     return;
@@ -4889,6 +4909,7 @@ diasContainer.addEventListener("click", e=>{
   }
   if(action === "pick-libre" && cual){
     pickerUI.vista = "libre";
+    pickerUI.libreTexto = mv ? (mv[cual + "Libre"] || "") : "";
     pickerUI.focoManual = false;
     renderDias();
     return;
@@ -4897,12 +4918,14 @@ diasContainer.addEventListener("click", e=>{
     if(pickerUI.vista === "proveedores" && pickerUI.tipoProveedor){
       pickerUI.tipoProveedor = null;
       pickerUI.busqueda = "";
+      pickerUI.libreTexto = "";
       pickerUI.focoManual = false;
       renderDias();
       return;
     }
     pickerUI.vista = "root";
     pickerUI.busqueda = "";
+    pickerUI.libreTexto = "";
     pickerUI.focoManual = false;
     pickerUI.tipoProveedor = null;
     renderDias();
@@ -4919,6 +4942,7 @@ diasContainer.addEventListener("click", e=>{
     mv[cual+"Libre"] = texto;
     mv[cual+"Id"] = "";
     pickerUI.openKey = null;
+    pickerUI.libreTexto = "";
     marcarCarga(dia);
     if(tienePunto(mv)) autoCalcularKm(mv, dia); else { renderDias(); persistir(); }
     return;
@@ -4977,6 +5001,10 @@ diasContainer.addEventListener("input", e=>{
   if(e.target.classList.contains("picker-search")){
     pickerUI.busqueda = e.target.value;
     renderDias();
+    return;
+  }
+  if(e.target.classList.contains("picker-libre-input")){
+    pickerUI.libreTexto = e.target.value;
     return;
   }
   const diaEl = e.target.closest("[data-dia-id]");
@@ -5726,6 +5754,7 @@ function intentarLogin(){
   const errorEl = document.getElementById("loginError");
   if(cuenta && pass === cuenta.password){
     currentUser = u;
+    guardarSesion(u);
     errorEl.classList.remove("show");
     document.getElementById("loginPassword").value = "";
     document.getElementById("loginGate").style.display = "none";
@@ -5741,6 +5770,7 @@ document.getElementById("loginPassword").addEventListener("keydown", e=>{
 });
 document.getElementById("btnSalir").addEventListener("click", ()=>{
   currentUser = null;
+  borrarSesion();
   poblarLoginUsuarios();
   document.getElementById("loginPassword").value = "";
   document.getElementById("loginError").classList.remove("show");
@@ -5901,7 +5931,7 @@ document.getElementById("tbodyUsuarios").addEventListener("change", e=>{
       const posOrden = DATA.usuariosOrden.indexOf(key);
       if(posOrden !== -1) DATA.usuariosOrden[posOrden] = nuevo;
       else DATA.usuariosOrden.push(nuevo);
-      if(currentUser === key) currentUser = nuevo;
+      if(currentUser === key){ currentUser = nuevo; guardarSesion(nuevo); }
     }
     renderUsuarios();
     persistir();
@@ -5986,6 +6016,15 @@ cargarInicial().then(()=>{
   datosListos = true;
   poblarLoginUsuarios();
   actualizarBotonLogin();
+  const sesionGuardada = leerSesion();
+  if(sesionGuardada && DATA.usuarios[sesionGuardada]){
+    currentUser = sesionGuardada;
+    document.getElementById("loginGate").style.display = "none";
+    document.getElementById("appRoot").style.display = "";
+    aplicarPermisos();
+  } else if(sesionGuardada){
+    borrarSesion(); // el usuario guardado ya no existe (fue eliminado)
+  }
 });
 </script>
 </body>
