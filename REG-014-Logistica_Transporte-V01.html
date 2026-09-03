@@ -3575,6 +3575,25 @@ function defaultData(){
    CARGA INICIAL (Firebase + localStorage fallback)
 ============================================================ */
 let cargaInicialHecha = false;
+let _renderDiasPendiente = false;
+function _hayInteraccionActivaEnDias(){
+  const active = document.activeElement;
+  const cont = document.getElementById("diasContainer");
+  return !!(active && ["SELECT","INPUT","TEXTAREA"].includes(active.tagName) && cont && cont.contains(active));
+}
+document.addEventListener("focusout", (e)=>{
+  if(!_renderDiasPendiente) return;
+  const cont = document.getElementById("diasContainer");
+  if(!cont || !cont.contains(e.target)) return;
+  // Esperar un instante por si el foco se movió a OTRO campo dentro del mismo
+  // contenedor (por ejemplo, de "hora" a "minuto") — en ese caso, todavía no renderizar.
+  setTimeout(()=>{
+    if(_renderDiasPendiente && !_hayInteraccionActivaEnDias()){
+      _renderDiasPendiente = false;
+      renderDias();
+    }
+  }, 80);
+});
 function aplicarDatosListos(){
   if(aplicarSeedMaestrosSiCorresponde()){
     persistir();
@@ -3617,10 +3636,20 @@ async function cargarInicial(){
         resolve(); /* recién acá se considera "cargado" — es lo que espera el .then() de más abajo */
       } else if(remote && remote.data){
         /* Cambio remoto posterior a la carga inicial: puede venir de otra pestaña/usuario,
-           o ser el eco de nuestro propio guardado — en ambos casos se refleja igual. */
+           o ser el eco de nuestro propio guardado — en ambos casos se refleja igual.
+           Si el usuario tiene un selector de hora (u otro campo) activo dentro de
+           #diasContainer justo en este momento, NO se reconstruye la tabla ahora —
+           haría exactamente lo que el código original evitaba a propósito (romper
+           el selector de hora a mitad de la elección). Se deja pendiente y se
+           aplica apenas el usuario termine de interactuar con ese campo. */
         DATA = normalizeData(remote.data); lastTs = remote.ts||0;
         lsSet(LS_KEY, { data: DATA, ts: lastTs });
-        renderMaestros(); renderDias();
+        renderMaestros();
+        if(_hayInteraccionActivaEnDias()){
+          _renderDiasPendiente = true;
+        } else {
+          renderDias();
+        }
         if(currentUser && permisosActuales().pagos) renderPagos();
         if(currentUser && permisosActuales().administracion) renderUsuarios();
         setSyncStatus("En vivo","sync-ok");
