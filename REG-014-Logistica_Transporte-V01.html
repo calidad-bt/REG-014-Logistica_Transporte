@@ -1052,10 +1052,10 @@ function setSyncStatus(text, cls){
    del cliente, visible en el código fuente — no reemplaza seguridad real.
 ============================================================ */
 const DEFAULT_USUARIOS = {
-  florencia: { password: "flor2026", permisos: { movimientos:true, maestros:true, pagos:true, administracion:true  }, personas: { leo:true,  tito:true  } },
-  martin:    { password: "mar2026", permisos: { movimientos:true, maestros:true, pagos:true, administracion:false }, personas: { leo:true,  tito:true  } },
-  leo:       { password: "leo2026", permisos: { movimientos:true, maestros:false,pagos:false,administracion:false }, personas: { leo:true,  tito:false } },
-  tito:      { password: "tito2026", permisos: { movimientos:true, maestros:false,pagos:false,administracion:false }, personas: { leo:false, tito:true  } }
+  florencia: { password: "2026", permisos: { movimientos:true, maestros:true, pagos:true, administracion:true  }, personas: { leo:true,  tito:true  } },
+  martin:    { password: "2026", permisos: { movimientos:true, maestros:true, pagos:true, administracion:false }, personas: { leo:true,  tito:true  } },
+  leo:       { password: "2026", permisos: { movimientos:true, maestros:false,pagos:false,administracion:false }, personas: { leo:true,  tito:false } },
+  tito:      { password: "2026", permisos: { movimientos:true, maestros:false,pagos:false,administracion:false }, personas: { leo:false, tito:true  } }
 };
 let currentUser = null; // se completa al hacer login, ej: "florencia"
 
@@ -1135,8 +1135,18 @@ function badgeCarga(obj, prefix, etiqueta){
   return `<span class="carga-badge no-print" title="${escAttr(txt)}">${ICON_USER}</span>`;
 }
 
+/* Si Firebase guardó un array con huecos (por ejemplo, se borró un elemento
+   del medio), lo devuelve como objeto con claves en vez de array — y ahí
+   un simple Array.isArray(x) da false y se pierde todo. Esta función
+   recupera los valores igual, estén en la forma que estén. */
+function comoArray(x){
+  if(Array.isArray(x)) return x;
+  if(x && typeof x === "object") return Object.keys(x).sort((a,b)=>Number(a)-Number(b)).map(k=>x[k]);
+  return [];
+}
+
 function normalizeDiasArray(arr){
-  arr = Array.isArray(arr) ? arr : [];
+  arr = comoArray(arr);
   arr.forEach((dia,idx)=>{
     dia.id = dia.id || uid();
     dia.fecha = dia.fecha || "";
@@ -1144,7 +1154,7 @@ function normalizeDiasArray(arr){
     dia.horasExtraManual = dia.horasExtraManual != null ? dia.horasExtraManual : "";
     dia.obs = dia.obs || "";
     dia.creadoTs = dia.creadoTs != null ? dia.creadoTs : idx;
-    dia.movimientos = Array.isArray(dia.movimientos) ? dia.movimientos : [];
+    dia.movimientos = comoArray(dia.movimientos);
     dia.movimientos.forEach(mv=>{
       mv.id = mv.id || uid();
       mv.horaIni = mv.horaIni || "";
@@ -1154,7 +1164,7 @@ function normalizeDiasArray(arr){
       mv.partidaLibre = mv.partidaLibre || "";
       mv.llegadaLibre = mv.llegadaLibre || "";
       mv.km = mv.km != null ? mv.km : "";
-      mv.gastos = Array.isArray(mv.gastos) ? mv.gastos : [];
+      mv.gastos = comoArray(mv.gastos);
     });
   });
   return arr;
@@ -1165,12 +1175,13 @@ function normalizeDiasArray(arr){
 function normalizeData(d){
   d = (d && typeof d === "object") ? d : {};
   d.maestros = (d.maestros && typeof d.maestros === "object") ? d.maestros : {};
-  d.maestros.salud = Array.isArray(d.maestros.salud) ? d.maestros.salud : [];
-  d.maestros.encomiendas = Array.isArray(d.maestros.encomiendas) ? d.maestros.encomiendas : [];
-  d.maestros.esterilizadoras = Array.isArray(d.maestros.esterilizadoras) ? d.maestros.esterilizadoras
-    : (Array.isArray(d.maestros.otros) ? d.maestros.otros : []); // migración desde la categoría vieja "otros"
-  d.maestros.proveedores = Array.isArray(d.maestros.proveedores) ? d.maestros.proveedores : [];
-  d.maestros.puntosFijos = Array.isArray(d.maestros.puntosFijos) ? d.maestros.puntosFijos : [];
+  d.maestros.salud = comoArray(d.maestros.salud);
+  d.maestros.encomiendas = comoArray(d.maestros.encomiendas);
+  d.maestros.esterilizadoras = Array.isArray(d.maestros.esterilizadoras) || (d.maestros.esterilizadoras && typeof d.maestros.esterilizadoras==="object")
+    ? comoArray(d.maestros.esterilizadoras)
+    : comoArray(d.maestros.otros); // migración desde la categoría vieja "otros"
+  d.maestros.proveedores = comoArray(d.maestros.proveedores);
+  d.maestros.puntosFijos = comoArray(d.maestros.puntosFijos);
   delete d.maestros.otros;
   d.biotrom = (d.biotrom && typeof d.biotrom === "object") ? d.biotrom : { ...BIOTROM_DEFAULT };
   d.biotrom.id = BIOTROM_ID;
@@ -1234,7 +1245,7 @@ function normalizeData(d){
   /* Orden manual (drag & drop) de la tabla de Usuarios. Se conserva en DATA para que
      sincronice entre dispositivos; usuarios nuevos o de datos viejos sin orden guardado
      se agregan al final. */
-  d.usuariosOrden = Array.isArray(d.usuariosOrden) ? d.usuariosOrden.filter(k=> d.usuarios[k]) : [];
+  d.usuariosOrden = comoArray(d.usuariosOrden).filter(k=> d.usuarios[k]);
   Object.keys(d.usuarios).forEach(k=>{
     if(!d.usuariosOrden.includes(k)) d.usuariosOrden.push(k);
   });
@@ -3642,14 +3653,22 @@ async function verificarMaestrosPendientes(cat){
   }
 }
 async function verificarTodosMaestrosInicial(){
+  let huboAlgunaVerificacion = false;
   if(DATA.biotrom.ubicacion && DATA.biotrom.ubicacion.trim() && DATA.biotrom._lat == null){
     await verificarUbicacionMaestro("biotrom", DATA.biotrom.id);
+    huboAlgunaVerificacion = true;
     await new Promise(res=>setTimeout(res, 350));
   }
   const cats = ["puntosFijos","salud","encomiendas","esterilizadoras","proveedores"];
   for(const cat of cats){
+    const antesDeVerificar = DATA.maestros[cat].some(m=> m.ubicacion && m.ubicacion.trim() && m._lat == null);
+    if(antesDeVerificar) huboAlgunaVerificacion = true;
     await verificarMaestrosPendientes(cat);
   }
+  /* Recién ahora, una sola vez para todo el barrido (no una vez por lugar),
+     se guarda en Firebase. Así la próxima vez que se abra la app estas
+     coordenadas ya están cacheadas y no hace falta volver a pedirlas. */
+  if(huboAlgunaVerificacion) persistir();
 }
 
 let guardadosPendientes = 0;
@@ -3792,8 +3811,8 @@ const GASTO_TIPOS = ["Estacionamiento","Combustible / Nafta","Peaje","Encomienda
    a mano) y para calcular la distancia real de ruta en auto por calle.
    Si el servicio no responde, cae a una estimación por línea recta.
 ============================================================ */
-const ORS_API_KEY = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjY2NjdmODZhNmQ1NzQwOGY5YWEyMGU2Zjg5M2RmNjBkIiwiaCI6Im11cm11cjY0In0=";
-const ORS_BASE = "https://api.openrouteservice.org";
+const ORS_API_KEY = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImUwYWQ0ZWQxYTIxNzQ4YjliMjlkYTRiMTVlYTZkNDdhIiwiaCI6Im11cm11cjY0In0=";
+const ORS_BASE = "https://api.heigit.org";
 const FACTOR_RUTA = 1.35; // corrige la distancia recta cuando no se puede calcular la ruta real (respaldo)
 
 /* Distancia de ruta real (por calles) via OpenRouteService Directions.
@@ -4416,7 +4435,7 @@ document.getElementById("maestros").addEventListener("change", e=>{
     }
     if(item) marcarCarga(item);
     persistir(); renderDias();
-    if(tr) verificarUbicacionMaestro(cat, id);
+    if(tr) verificarUbicacionMaestro(cat, id).then(()=>persistir());
     return;
   }
   if(item) marcarCarga(item);
