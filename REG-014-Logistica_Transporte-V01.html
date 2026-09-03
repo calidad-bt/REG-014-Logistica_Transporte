@@ -3820,7 +3820,7 @@ const FACTOR_RUTA = 1.35; // corrige la distancia recta cuando no se puede calcu
    corregida como respaldo. */
 async function distanciaRutaKm(cp, cl){
   try{
-    const url = `${ORS_BASE}/v2/directions/driving-car?api_key=${encodeURIComponent(ORS_API_KEY)}&start=${cp.lng},${cp.lat}&end=${cl.lng},${cl.lat}`;
+    const url = `${ORS_BASE}/openrouteservice/v2/directions/driving-car?api_key=${encodeURIComponent(ORS_API_KEY)}&start=${cp.lng},${cp.lat}&end=${cl.lng},${cl.lat}`;
     const r = await fetch(url);
     if(!r.ok) return null;
     const data = await r.json();
@@ -3833,7 +3833,7 @@ async function distanciaRutaKm(cp, cl){
 async function geocodeDireccion(direccion){
   if(!direccion || !direccion.trim()) return { error: "sin-direccion" };
   try{
-    const url = `${ORS_BASE}/geocode/search?api_key=${encodeURIComponent(ORS_API_KEY)}&text=${encodeURIComponent(direccion)}&boundary.country=AR&size=1`;
+    const url = `${ORS_BASE}/pelias/v1/search?api_key=${encodeURIComponent(ORS_API_KEY)}&text=${encodeURIComponent(direccion)}&boundary.country=AR&size=1`;
     const r = await fetch(url);
     if(!r.ok) return { error: "http-"+r.status };
     const data = await r.json();
@@ -3946,7 +3946,7 @@ const ICON_RUTA = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" x
    a simple vista si el sistema está cortando por algún lugar que no corresponde. */
 async function obtenerRutaConGeometria(cp, cl){
   try{
-    const url = `${ORS_BASE}/v2/directions/driving-car?api_key=${encodeURIComponent(ORS_API_KEY)}&start=${cp.lng},${cp.lat}&end=${cl.lng},${cl.lat}`;
+    const url = `${ORS_BASE}/openrouteservice/v2/directions/driving-car?api_key=${encodeURIComponent(ORS_API_KEY)}&start=${cp.lng},${cp.lat}&end=${cl.lng},${cl.lat}`;
     const r = await fetch(url);
     if(!r.ok) return null;
     const data = await r.json();
