@@ -10,6 +10,7 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
@@ -995,7 +996,6 @@ tr.drag-over td{background:var(--accent-l); border-top:2px solid var(--accent);}
 /* ============================================================
    CONFIG / FIREBASE / LOCALSTORAGE
 ============================================================ */
-const FB_URL = "https://sgc2-72ddb-default-rtdb.firebaseio.com";
 const FB_PATH = "/reg014";
 const LS_KEY = "REG014_v1";
 const LS_SESSION_KEY = "REG014_sesion";
@@ -1006,13 +1006,13 @@ let lastTs = 0;
 
 /* ── FIREBASE AUTH (anónimo) ─────────────────────────────── */
 const firebaseConfig = {
-  apiKey: "AIzaSyAIMGOPszFGS29hlLCdhD6woff-U6RrvNA",
-  authDomain: "sgc2-72ddb.firebaseapp.com",
-  databaseURL: "https://sgc2-72ddb-default-rtdb.firebaseio.com",
-  projectId: "sgc2-72ddb",
-  storageBucket: "sgc2-72ddb.firebasestorage.app",
-  messagingSenderId: "888988125222",
-  appId: "1:888988125222:web:8caf83fb73482e6c09bee7"
+  apiKey: "AIzaSyAjcppsJZvGXfNiMJ_5u9T52C-r-HOk9wY",
+  authDomain: "sgc-a-848bc.firebaseapp.com",
+  databaseURL: "https://sgc-a-848bc-default-rtdb.firebaseio.com",
+  projectId: "sgc-a-848bc",
+  storageBucket: "sgc-a-848bc.firebasestorage.app",
+  messagingSenderId: "488017079925",
+  appId: "1:488017079925:web:b389c35d91d0a0b1c7123c"
 };
 firebase.initializeApp(firebaseConfig);
 
@@ -1026,26 +1026,11 @@ function ensureSignedIn(){
   }
   return _authReadyPromise;
 }
-async function getAuthToken(){
-  await ensureSignedIn();
-  return firebase.auth().currentUser.getIdToken();
-}
-
-async function fbGet(path){
-  const token = await getAuthToken();
-  const r = await fetch(FB_URL + path + ".json?auth=" + token);
-  if(!r.ok) throw new Error(r.status);
-  return r.json();
-}
-async function fbSet(path, data){
-  const token = await getAuthToken();
-  const r = await fetch(FB_URL + path + ".json?auth=" + token, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data)
-  });
-  if(!r.ok) throw new Error(r.status);
-  return r.json();
+let db = null;
+let dbRef = null;
+function getDbRef(){
+  if(!dbRef){ db = firebase.database(); dbRef = db.ref(FB_PATH); }
+  return dbRef;
 }
 function lsGet(k){ try{ return JSON.parse(localStorage.getItem(k)||"null"); }catch(e){ return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
@@ -1067,10 +1052,10 @@ function setSyncStatus(text, cls){
    del cliente, visible en el código fuente — no reemplaza seguridad real.
 ============================================================ */
 const DEFAULT_USUARIOS = {
-  florencia: { password: "2026", permisos: { movimientos:true, maestros:true, pagos:true, administracion:true  }, personas: { leo:true,  tito:true  } },
-  martin:    { password: "2026", permisos: { movimientos:true, maestros:true, pagos:true, administracion:false }, personas: { leo:true,  tito:true  } },
-  leo:       { password: "2026", permisos: { movimientos:true, maestros:false,pagos:false,administracion:false }, personas: { leo:true,  tito:false } },
-  tito:      { password: "2026", permisos: { movimientos:true, maestros:false,pagos:false,administracion:false }, personas: { leo:false, tito:true  } }
+  florencia: { password: "flor2026", permisos: { movimientos:true, maestros:true, pagos:true, administracion:true  }, personas: { leo:true,  tito:true  } },
+  martin:    { password: "mar2026", permisos: { movimientos:true, maestros:true, pagos:true, administracion:false }, personas: { leo:true,  tito:true  } },
+  leo:       { password: "leo2026", permisos: { movimientos:true, maestros:false,pagos:false,administracion:false }, personas: { leo:true,  tito:false } },
+  tito:      { password: "tito2026", permisos: { movimientos:true, maestros:false,pagos:false,administracion:false }, personas: { leo:false, tito:true  } }
 };
 let currentUser = null; // se completa al hacer login, ej: "florencia"
 
@@ -3578,25 +3563,8 @@ function defaultData(){
 /* ============================================================
    CARGA INICIAL (Firebase + localStorage fallback)
 ============================================================ */
-async function cargarInicial(){
-  setSyncStatus("Cargando…","");
-  let remote = null, local = lsGet(LS_KEY);
-  try{ remote = await fbGet(FB_PATH); }catch(e){ remote = null; }
-  if(remote && remote.data && (!local || (remote.ts||0) >= (local.ts||0))){
-    DATA = normalizeData(remote.data); lastTs = remote.ts||0;
-    lsSet(LS_KEY, { data: DATA, ts: lastTs });
-    setSyncStatus("En vivo","sync-ok");
-  } else if(local && local.data){
-    DATA = normalizeData(local.data); lastTs = local.ts||0;
-    try{ await fbSet(FB_PATH, { data: DATA, ts: lastTs }); setSyncStatus("En vivo","sync-ok"); }
-    catch(e){ setSyncStatus("Sin conexión","sync-error"); }
-  } else {
-    DATA = normalizeData(defaultData()); lastTs = Date.now();
-    const payload = { data: DATA, ts: lastTs };
-    lsSet(LS_KEY, payload);
-    try{ await fbSet(FB_PATH, payload); setSyncStatus("En vivo","sync-ok"); }
-    catch(e){ setSyncStatus("Sin conexión","sync-error"); }
-  }
+let cargaInicialHecha = false;
+function aplicarDatosListos(){
   if(aplicarSeedMaestrosSiCorresponde()){
     persistir();
   }
@@ -3605,6 +3573,60 @@ async function cargarInicial(){
   renderMaestros();
   renderDias();
   verificarTodosMaestrosInicial();
+}
+
+async function cargarInicial(){
+  setSyncStatus("Cargando…","");
+  try{ await ensureSignedIn(); }catch(e){ setSyncStatus("Sin conexión","sync-error"); }
+
+  return new Promise((resolve)=>{
+    getDbRef().on("value", (snap)=>{
+      const remote = snap.val();
+
+      if(!cargaInicialHecha){
+        cargaInicialHecha = true;
+        const local = lsGet(LS_KEY);
+        if(remote && remote.data && (!local || (remote.ts||0) >= (local.ts||0))){
+          /* El nodo remoto ya tiene datos y son iguales o más nuevos que el caché local: se usa tal cual. */
+          DATA = normalizeData(remote.data); lastTs = remote.ts||0;
+          lsSet(LS_KEY, { data: DATA, ts: lastTs });
+          setSyncStatus("En vivo","sync-ok");
+        } else if(local && local.data){
+          /* El caché local es más nuevo que lo remoto (por ejemplo: se guardó un cambio estando
+             sin conexión) — se usa el local y se sube, para no perder ese cambio. */
+          DATA = normalizeData(local.data); lastTs = local.ts||0;
+          persistir();
+        } else {
+          /* No hay nada remoto ni local: primera vez que se abre la app. */
+          DATA = normalizeData(defaultData()); lastTs = Date.now();
+          lsSet(LS_KEY, { data: DATA, ts: lastTs });
+          persistir();
+        }
+        aplicarDatosListos();
+        resolve(); /* recién acá se considera "cargado" — es lo que espera el .then() de más abajo */
+      } else if(remote && remote.data){
+        /* Cambio remoto posterior a la carga inicial: puede venir de otra pestaña/usuario,
+           o ser el eco de nuestro propio guardado — en ambos casos se refleja igual. */
+        DATA = normalizeData(remote.data); lastTs = remote.ts||0;
+        lsSet(LS_KEY, { data: DATA, ts: lastTs });
+        renderMaestros(); renderDias();
+        if(currentUser && permisosActuales().pagos) renderPagos();
+        if(currentUser && permisosActuales().administracion) renderUsuarios();
+        setSyncStatus("En vivo","sync-ok");
+      }
+    }, (error)=>{
+      console.error("Error de sync Firebase:", error);
+      setSyncStatus("Sin conexión","sync-error");
+      if(!cargaInicialHecha){
+        cargaInicialHecha = true;
+        const local = lsGet(LS_KEY);
+        DATA = normalizeData(local && local.data ? local.data : defaultData());
+        lastTs = (local && local.ts) || Date.now();
+        aplicarDatosListos();
+        resolve();
+      }
+    });
+  });
 }
 
 /* Verifica, para una categoría del maestro, las direcciones que todavía no
@@ -3637,7 +3659,7 @@ function persistir(){
   lsSet(LS_KEY, payload);
   setSyncStatus("Guardando…","");
   guardadosPendientes++;
-  fbSet(FB_PATH, payload).then(()=>{
+  getDbRef().set(payload).then(()=>{
     const now = new Date();
     const hh = String(now.getHours()).padStart(2,"0");
     const mm = String(now.getMinutes()).padStart(2,"0");
@@ -3659,21 +3681,9 @@ window.addEventListener("beforeunload", e=>{
 });
 
 
-setInterval(async ()=>{
-  try{
-    const remote = await fbGet(FB_PATH);
-    if(remote && remote.data && (remote.ts||0) > lastTs){
-      DATA = normalizeData(remote.data); lastTs = remote.ts;
-      lsSet(LS_KEY, { data: DATA, ts: lastTs });
-      renderMaestros(); renderDias();
-      if(currentUser && permisosActuales().pagos) renderPagos();
-      if(currentUser && permisosActuales().administracion) renderUsuarios();
-    }
-    setSyncStatus("En vivo","sync-ok");
-  }catch(e){
-    setSyncStatus("Sin conexión","sync-error");
-  }
-}, 30000);
+/* El polling por setInterval ya no es necesario: el listener onValue de
+   getDbRef() (ver cargarInicial) recibe los cambios remotos apenas ocurren,
+   en vez de tener que volver a pedir el nodo completo cada 30 segundos. */
 
 /* ============================================================
    AUTOGROW TEXTAREAS
@@ -5182,21 +5192,14 @@ document.querySelectorAll(".nav-links a").forEach(a=>{
 /* ============================================================
    BOTONES NAV: ACTUALIZAR / IMPRIMIR
 ============================================================ */
-document.getElementById("btnActualizar").addEventListener("click", async ()=>{
-  setSyncStatus("Cargando…","");
-  try{
-    const remote = await fbGet(FB_PATH);
-    if(remote && remote.data){
-      DATA = normalizeData(remote.data); lastTs = remote.ts||Date.now();
-      lsSet(LS_KEY, { data: DATA, ts: lastTs });
-      document.getElementById("metaAprobacion").value = DATA.metaAprobacion || "";
-      document.getElementById("metaVigor").value = DATA.metaVigor || "";
-      renderMaestros(); renderDias();
-    }
-    setSyncStatus("En vivo","sync-ok");
-  }catch(e){
-    setSyncStatus("Sin conexión","sync-error");
-  }
+document.getElementById("btnActualizar").addEventListener("click", ()=>{
+  /* Con el listener en tiempo real, DATA ya está siempre actualizado —
+     este botón ahora solo vuelve a pintar la pantalla por si algo quedó
+     desincronizado visualmente, sin necesidad de pedir nada a Firebase. */
+  document.getElementById("metaAprobacion").value = DATA.metaAprobacion || "";
+  document.getElementById("metaVigor").value = DATA.metaVigor || "";
+  renderMaestros(); renderDias();
+  setSyncStatus("En vivo","sync-ok");
 });
 document.getElementById("btnImprimir").addEventListener("click", ()=> window.print());
 
